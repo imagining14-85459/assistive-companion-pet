@@ -184,19 +184,15 @@ class PetUI:
             color = (100, 200, 255)  # Blue for Default mode
         
         # Animation: bouncing effect
-        bounce = math.sin(self.frame * 0.1) * 5
-        body_y = pet.y + bounce
-        
+        bounce = math.sin(self.frame * 0.1)
+        pet.y = pet.y + bounce
+        pet.update_rect()
+
         # Draw pet
         sprites = pygame.sprite.Group()
         sprites.add(pet)
+        if pet.hat: sprites.add(pet.hat)
         sprites.draw(self.screen)
-        
-        # Draw hat if equipped #TODO
-        # if hat == "Top Hat":
-        #     hat_y = 40 + bounce
-        #     pygame.draw.rect(self.screen, (40, 40, 40), (95, int(hat_y), 60, 25))
-        #     pygame.draw.rect(self.screen, (10, 10, 10), (85, int(hat_y + 25), 80, 5))
         
         # Draw mode indicator emoji
         mode_text = "🎯" if mode == "focus" else "📚"
