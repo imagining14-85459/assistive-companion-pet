@@ -10,3 +10,4 @@ pyobjc-framework-Cocoa; sys_platform == "darwin"
 flask==3.0.0
 flask-cors==4.0.0
 pyperclip==1.8.2
+numpy < 2
