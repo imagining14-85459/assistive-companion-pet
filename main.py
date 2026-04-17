@@ -4,6 +4,9 @@ import sys
 import os
 import webbrowser
 
+import pygame
+
+
 def main():
     """Launch both Flask web dashboard and desktop overlay"""
     print("🐾 Starting Aether Assistant...")
@@ -41,8 +44,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
     pygame.quit()
-
-if __name__ == "__main__":
-    main()

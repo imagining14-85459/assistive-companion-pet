@@ -3,13 +3,14 @@ import win32api, win32con, win32gui
 import math
 import json
 import time
+from pet_body import Pet
 
 class PetUI:
-    def __init__(self, size=(250, 280)):
+    def __init__(self, size=(1920, 1080)):
         pygame.init()
         self.size = size
         self.trans_color = (255, 0, 128) # Fuchsia background
-        self.screen = pygame.display.set_mode(size, pygame.NOFRAME)
+        self.screen = pygame.display.set_mode(self.size, pygame.NOFRAME)
         pygame.display.set_caption("Aether Assistant - Pet")
         
         # Animation tracking
@@ -64,16 +65,6 @@ class PetUI:
         if self.selected_option < len(self.menu_options):
             return self.menu_options[self.selected_option]
         return None
-
-    def draw_pet(self, body_y, color):
-        """Draw the pet character"""
-        # Draw Pet Body
-        pygame.draw.circle(self.screen, color, (125, int(body_y)), 60) # Body
-        pygame.draw.circle(self.screen, (0, 0, 0), (105, int(body_y - 10)), 5) # Eye L
-        pygame.draw.circle(self.screen, (0, 0, 0), (145, int(body_y - 10)), 5) # Eye R
-        
-        # Happy mouth (curved smile)
-        pygame.draw.arc(self.screen, (0, 0, 0), (110, int(body_y + 5), 30, 20), 0, 3.14, 2)
 
     def draw_speech_bubble(self):
         """Draw AI response speech bubble"""
@@ -150,7 +141,7 @@ class PetUI:
             text_surf = self.font_small.render(text, True, color)
             self.screen.blit(text_surf, (menu_x + 15, option_y + 8))
 
-    def draw(self, hat=None):
+    def draw(self, pet: Pet, hat=None):
         """Main draw function"""
         self.screen.fill(self.trans_color)
         
@@ -170,16 +161,18 @@ class PetUI:
         
         # Animation: bouncing effect
         bounce = math.sin(self.frame * 0.1) * 5
-        body_y = 110 + bounce
+        body_y = pet.y + bounce
         
         # Draw pet
-        self.draw_pet(body_y, color)
+        sprites = pygame.sprite.Group()
+        sprites.add(pet)
+        sprites.draw(self.screen)
         
-        # Draw hat if equipped
-        if hat == "Top Hat":
-            hat_y = 40 + bounce
-            pygame.draw.rect(self.screen, (40, 40, 40), (95, int(hat_y), 60, 25))
-            pygame.draw.rect(self.screen, (10, 10, 10), (85, int(hat_y + 25), 80, 5))
+        # Draw hat if equipped #TODO
+        # if hat == "Top Hat":
+        #     hat_y = 40 + bounce
+        #     pygame.draw.rect(self.screen, (40, 40, 40), (95, int(hat_y), 60, 25))
+        #     pygame.draw.rect(self.screen, (10, 10, 10), (85, int(hat_y + 25), 80, 5))
         
         # Draw mode indicator emoji
         mode_text = "🎯" if mode == "focus" else "📚"
