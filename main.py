@@ -9,19 +9,18 @@ def main():
     print("🐾 Starting Aether Assistant...")
     print("📚 Hybrid Architecture: Web Dashboard + Desktop Overlay")
     
-    # Start Flask app in a separate process
-    print("\n🌐 Starting Web Dashboard on http://localhost:5000...")
+    port = 5001 if sys.platform == "darwin" else 5000
+
+    print(f"\n🌐 Starting Web Dashboard on http://localhost:{port}...")
     flask_process = subprocess.Popen([sys.executable, "app.py"])
-    
-    # Give Flask time to start
+
     time.sleep(2)
-    
-    # Open web browser to dashboard
+
     try:
-        webbrowser.open("http://localhost:5000")
+        webbrowser.open(f"http://localhost:{port}")
         print("✅ Dashboard opened in browser")
     except:
-        print("⚠️  Could not open browser. Visit http://localhost:5000 manually")
+        print(f"⚠️  Could not open browser. Visit http://localhost:{port} manually")
     
     # Start overlay
     print("\n🐾 Starting Desktop Overlay...")

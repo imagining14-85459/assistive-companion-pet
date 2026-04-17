@@ -1,5 +1,5 @@
 import pygame
-import win32api, win32con, win32gui
+import sys
 import math
 import json
 import time
@@ -31,12 +31,36 @@ class PetUI:
             {'key': 'E', 'label': 'Explain', 'intent': 'explain'},
         ]
         self.selected_option = 0
+
+        if sys.platform == "win32":
+            import win32api, win32con, win32gui
+            hwnd = pygame.display.get_wm_info()["window"]
+            win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
+            win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*self.trans_color), 0, win32con.LWA_COLORKEY)
+        else:
+            # Mac: try to float window above others using pyobjc
+            try:
+                from AppKit import NSApp, NSFloatingWindowLevel
+                NSApp.windows()[0].setLevel_(NSFloatingWindowLevel)
+            except ImportError:
+                pass  # works without it, just won't float above other windows
         
-        # Transparent Overlay Logic
+        # Platform-specific overlay setup
         hwnd = pygame.display.get_wm_info()["window"]
-        win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
-        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
-        win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*self.trans_color), 0, win32con.LWA_COLORKEY)
+        # Platform-specific overlay setup
+        if sys.platform == "win32":
+            import win32api, win32con, win32gui
+            hwnd = pygame.display.get_wm_info()["window"]
+            win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
+            win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*self.trans_color), 0, win32con.LWA_COLORKEY)
+        else:
+            try:
+                from AppKit import NSApp, NSFloatingWindowLevel
+                NSApp.windows()[0].setLevel_(NSFloatingWindowLevel)
+            except ImportError:
+                pass
 
     def show_speech_bubble(self, text, duration=5):
         """Display AI response as a speech bubble"""

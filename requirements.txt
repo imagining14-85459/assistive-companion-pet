@@ -5,7 +5,8 @@ google-generativeai==0.3.0
 pyttsx3==2.90
 python-dotenv==1.0.0
 pyautogui==0.9.54
-pywin32==306
+pywin32==306; sys_platform == "win32"
+pyobjc-framework-Cocoa; sys_platform == "darwin"
 flask==3.0.0
 flask-cors==4.0.0
 pyperclip==1.8.2
