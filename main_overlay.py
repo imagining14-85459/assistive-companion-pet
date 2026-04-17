@@ -46,6 +46,21 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            if event.type == pygame.MOUSEMOTION and pet.held_down:
+                dx,dy = event.rel
+                pet.speed = (dx**2 + dy**2)**0.5
+                pet.take_step(current_destination[0], current_destination[1])
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pet.collide(event.pos): # Pet is clicked on
+                    pet.held_down = True
+                    # Additional left click events
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if pet.held_down: # lets the pet go
+                    pet.held_down = False
+                    pet.speed = 10
+
             if event.type == pygame.KEYDOWN:
                 # Menu navigation
                 if ui.show_menu:
@@ -91,7 +106,7 @@ def main():
                     pass
 
         # Movement logic
-        if abs(current_destination[0] - pet.x) > pet.size*1.5 or abs(current_destination[1] - pet.y) > pet.size*1.5:
+        if abs(current_destination[0] - pet.x) > pet.size or abs(current_destination[1] - pet.y) > pet.size:
             pet.take_step(current_destination[0], current_destination[1])
 
 
