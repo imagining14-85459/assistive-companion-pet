@@ -4,5 +4,17 @@
     "level": 1,
     "inventory": [],
     "equipped_hat": null,
-    "last_water_break": 0
+    "current_session_time": 0,
+    "last_session_duration": 0,
+    "total_study_time": 0,
+    "mode": "default",
+    "language": "en",
+    "translation_language": "es",
+    "accessibility_features": {
+        "text_to_speech": true,
+        "tts_speed": 150,
+        "translation_enabled": true,
+        "sound_alerts_enabled": true
+    }
 }
+
