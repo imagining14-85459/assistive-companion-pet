@@ -35,9 +35,14 @@ def main():
     prev_mouse_pos = pyautogui.position()
     while running:
         # Update pet data for stats/cosmetics
-        with open("pet_data.json", "r") as f: # updates json data
-            data = json.load(f)
+        try:
+            with open("pet_data.json", "r") as f: # updates json data
+                data = json.load(f)
+        except json.decoder.JSONDecodeError:
+            # failed to open, skip for the frame
+            pass
         pet.shown = data["overlay_enabled"]
+        pet.update_hat(data["equipped_hat"])
         current_time = time.time()
         if prev_mouse_pos == pyautogui.position():
             idle += 1
@@ -46,7 +51,7 @@ def main():
             idle = 0
         if idle > 30 * 10:
             pet.state = "follow"
-            if pet.shown: ui.show_speech_bubble("Give me attention!", 5)
+            ui.pet_speaks(pet, "Give me attention!", 5)
 
         if pet.state == "follow":
             current_destination = pyautogui.position()
@@ -66,7 +71,7 @@ def main():
                     pet.held_down = True
                     if event.button == 1:
                         r_greeting = random.choice(["Hello!", "Hey!", "Stop..."])
-                        ui.show_speech_bubble(r_greeting, 3)
+                        ui.pet_speaks(pet,r_greeting, 3)
                     # Additional left click events
                     if event.button == 3:
                         ui.toggle_menu()
@@ -107,7 +112,7 @@ def main():
                                 print(f"🐾 {option['label']}:\n{response[:100]}...")
                             
                             # Show response in speech bubble
-                            ui.show_speech_bubble(response, duration=8)
+                            ui.pet_speaks(pet, response, duration=8)
                             
                             # Also read aloud if not bionic
                             if intent != "bionic":

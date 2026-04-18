@@ -63,6 +63,11 @@ class PetUI:
             except ImportError:
                 pass
 
+    def pet_speaks(self, pet, text, duration=5):
+        """ Orders a pet to speak. """
+        if not pet.shown: return
+        self.show_speech_bubble(text, duration)
+
     def show_speech_bubble(self, text, duration=5):
         """Display AI response as a speech bubble"""
         self.speech_bubble_text = text
@@ -129,6 +134,10 @@ class PetUI:
             text_surf = self.font_small.render(line, True, (0, 0, 0))
             self.screen.blit(text_surf, (bubble_x + 10, bubble_y + 7 + i * line_height))
 
+    def pet_menu(self, pet):
+        """ Shows the menu, depending on whether the pet is shown or not. """
+        if not pet.shown: return
+        self.draw_menu(pet.x, pet.y)
     def draw_menu(self, x, y):
         """Draw intent-based menu"""
         if not self.show_menu:
@@ -198,10 +207,10 @@ class PetUI:
         self.screen.blit(mode_label, (10, 10))
         
         # Draw speech bubble if active
-        self.draw_speech_bubble(pet.x, pet.y)
+        if pet.shown: self.draw_speech_bubble(pet.x, pet.y)
         
         # Draw menu if active
-        self.draw_menu(pet.x, pet.y)
+        self.pet_menu(pet)
         
         # Draw instructions if menu is showing
         if self.show_menu:

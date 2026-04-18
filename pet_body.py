@@ -2,14 +2,18 @@
 
 import pygame
 
-SPRITE_PATH = "test_rock.jpg"
-HATS = {"top_hat":"top_hat.jpg"}
+SPRITE_PATH = "assets/pet/test_rock.jpg"
+HATS = {"Top Hat":"assets/hats/top_hat.jpg", "Monocle":"assets/hats/monocle.jpg",
+        "Crown":"assets/hats/crown.jpg", "Sunglasses":"assets/hats/sunglasses.jpg"}
+FACEWEAR = ["Monocle", "Sunglasses"]
 class Hat(pygame.sprite.Sprite):
     def __init__(self, x, y, hat):
         super().__init__()
         self.x = x
         self.size = 50
-        self.y = y + self.size
+        self.facewear = hat in FACEWEAR
+        if self.facewear: self.y = y
+        else: self.y = y + self.size
         self.image = pygame.transform.scale(pygame.image.load(HATS[hat]).convert_alpha(), (self.size, self.size))
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
@@ -33,6 +37,9 @@ class Pet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
 
+    def update_hat(self, hat:str):
+        self.hat = Hat(self.x, self.y, hat)
+
     def collide(self, pos: tuple[int, int]) -> bool:
         return self.rect.collidepoint(pos[0], pos[1])
 
@@ -44,7 +51,9 @@ class Pet(pygame.sprite.Sprite):
 
     def update_rect(self):
         self.rect.center = (self.x, self.y)
+
         if self.hat:
             self.hat.x = self.x
-            self.hat.y = self.y-self.hat.size
+            if self.hat.facewear: self.hat.y = self.y
+            else: self.hat.y = self.y - self.hat.size
             self.hat.update_rect()
