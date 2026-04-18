@@ -1060,9 +1060,11 @@
     function updateUI() {
         const prevLevel = document.getElementById('level').textContent;
         const prevCoins = document.getElementById('currency').textContent;
+        
 
         document.getElementById('level').textContent = stats.level;
         document.getElementById('currency').textContent = Math.floor(stats.currency);
+        document.getElementById('hud-coins').textContent = Math.floor(stats.currency);
 
         if (String(stats.level) !== prevLevel) triggerPop('level');
         if (String(Math.floor(stats.currency)) !== prevCoins) triggerPop('currency');
@@ -1291,5 +1293,19 @@
     setInterval(loadStats, 1000);
     loadStats();
 </script>
+<div id="coin-hud" style="
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 999;
+    background: var(--gold);
+    border: 3px solid var(--wood-dark);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5em;
+    color: var(--wood-dark);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+">🪙 <span id="hud-coins">0</span></div>
 </body>
 </html>
