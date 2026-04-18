@@ -76,11 +76,11 @@ class Pet(pygame.sprite.Sprite):
         self.frame = 0
         match self.state:
             case "stay":
-                self.animation_id = random.choice([1,2,3,4,7])
+                self.animation_id = random.choice([0,1,2,3,6])
             case "follow" | "wander":
-                self.animation_id = random.choice([5,6])
+                self.animation_id = random.choice([4,5])
             case "attack":
-                self.animation_id = 8
+                self.animation_id = random.choice([7,8])
             case "carried":
                 self.animation_id = 9
 
