@@ -1,0 +1,22 @@
+{
+    "currency": 0,
+    "xp": 0,
+    "level": 1,
+    "inventory": [],
+    "equipped_hat": "Sunglasses",
+    "current_session_time": 0,
+    "last_session_duration": 0,
+    "total_study_time": 0,
+    "mode": "focus",
+    "language": "en",
+    "translation_language": "es",
+    "accessibility_features": {
+        "text_to_speech": true,
+        "tts_speed": 150,
+        "translation_enabled": true,
+        "sound_alerts_enabled": true
+    },
+    "overlay_enabled": true,
+    "last_ai_output": "\ud83e\udd16 AI service temporarily unavailable due to high usage. Please try again in a few minutes, or use the web dashboard for AI tools.",
+    "last_ai_time": 1776495021.0704367
+}
