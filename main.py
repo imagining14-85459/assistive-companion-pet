@@ -9,6 +9,15 @@ import pygame
 
 def main():
     """Launch both Flask web dashboard and desktop overlay"""
+    try: # Prepare data
+        with open("pet_data.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError: # Create pet_data.json using default_pet_info.json
+        with open("default_pet_info.json", "r") as f:
+            data = json.load(f)
+            with open("pet_info.json", "w") as g:
+                json.dump(data, g)
+
     print("Starting Aether Assistant...")
     print("Hybrid Architecture: Web Dashboard + Desktop Overlay")
     print(f"Using Python: {sys.executable}")
@@ -57,13 +66,6 @@ def main():
         print(f"Could not open browser. Visit http://localhost:{port}manually")
 
     # Start overlay (only if enabled)
-    data = {}
-    try:
-        with open("pet_data.json", "r") as f:
-            data = json.load(f)
-    except:
-        print(f"⚠️  Could not open browser. Visit http://localhost:{port} manually")
-    
     overlay_enabled = data.get('overlay_enabled', True)
 
     if overlay_enabled:
