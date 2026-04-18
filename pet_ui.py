@@ -186,10 +186,11 @@ class PetUI:
         pet.update_rect()
 
         # Draw pet
-        sprites = pygame.sprite.Group()
-        sprites.add(pet)
-        if pet.hat: sprites.add(pet.hat)
-        sprites.draw(self.screen)
+        if pet.shown:
+            sprites = pygame.sprite.Group()
+            sprites.add(pet)
+            if pet.hat: sprites.add(pet.hat)
+            sprites.draw(self.screen)
         
         # Draw mode indicator emoji
         mode_text = "🎯" if mode == "focus" else "📚"

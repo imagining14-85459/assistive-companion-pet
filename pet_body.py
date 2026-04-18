@@ -23,6 +23,7 @@ class Pet(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.state = "stay"
+        self.shown = True
         self.size = 100
         self.speed = speed # pixels / frame
         self.held_down = False # bool on if the mouse is holding the pet

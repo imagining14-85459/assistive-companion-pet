@@ -37,6 +37,7 @@ def main():
         # Update pet data for stats/cosmetics
         with open("pet_data.json", "r") as f: # updates json data
             data = json.load(f)
+        pet.shown = data["overlay_enabled"]
         current_time = time.time()
         if prev_mouse_pos == pyautogui.position():
             idle += 1
@@ -45,7 +46,7 @@ def main():
             idle = 0
         if idle > 30 * 10:
             pet.state = "follow"
-            ui.show_speech_bubble("Give me attention!", 5)
+            if pet.shown: ui.show_speech_bubble("Give me attention!", 5)
 
         if pet.state == "follow":
             current_destination = pyautogui.position()
