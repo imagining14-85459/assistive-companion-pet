@@ -174,7 +174,6 @@ class PetUI:
         """Draw AI response speech bubble"""
         if not self.is_speech_bubble_active():
             return
-
         # Load font size from pet data
         try:
             with open("pet_data.json", "r") as f:

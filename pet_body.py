@@ -14,11 +14,12 @@ class Pet(pygame.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
-        self.state = "stay"
+        self.state = "stay" #stay, wander, follow, attack, carried
         self.shown = True
         self.size = 280
-        self.speed = speed
-        self.held_down = False
+
+        self.speed = speed # pixels / frame
+        self.held_down = False # bool on if the mouse is holding the pet
         self.frame = 0
         self.animation_id = 3
 
@@ -27,6 +28,7 @@ class Pet(pygame.sprite.Sprite):
         self.update_hat(hat)
 
         self.sprite_sheet = pygame.image.load(self.curr_path).convert_alpha()
+        self.sprite_right = True
         self.image = self._get_image()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -61,7 +63,10 @@ class Pet(pygame.sprite.Sprite):
         return self.rect.collidepoint(pos[0], pos[1])
 
     def take_step(self, x, y):
-        direction = pygame.math.Vector2(x - self.x, y - self.y).normalize()
+        direction = pygame.math.Vector2(x-self.x, y-self.y).normalize()
+        if direction.x < 0: self.sprite_right = False
+        else: self.sprite_right = True
+
         self.x += direction.x * self.speed
         self.y += direction.y * self.speed
         self.update_rect()
@@ -75,14 +80,14 @@ class Pet(pygame.sprite.Sprite):
             case "follow" | "wander":
                 self.animation_id = random.choice([5,6])
             case "attack":
-                self.animation_id = random.choice([7,8])
+                self.animation_id = 8
             case "carried":
                 self.animation_id = 9
 
     def update_rect(self):
         self.rect.center = (self.x, self.y)
 
-    def animation_tick(self):
+    def animation_tick(self): #idle (0-2, 5: 4); walk (3,4: 8); harrass (6:6) harassed (7,8: 7,8)
         self.frame += 1
         match self.state:
             case "stay":
@@ -99,5 +104,6 @@ class Pet(pygame.sprite.Sprite):
         image = pygame.Surface((32, 32)).convert_alpha()
         image.blit(self.sprite_sheet, (0, 0), ((self.frame * 32), (self.animation_id * 32), 32, 32))
         image = pygame.transform.scale(image, (self.size, self.size))
-        image.set_colorkey((0, 0, 0))
+        if not self.sprite_right: image = pygame.transform.flip(image, True, False)
+        image.set_colorkey((0, 0, 0)) # Remove background color if needed
         return image
