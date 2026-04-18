@@ -1,261 +1,147 @@
 import pygame
 import json
 import time
+import pyautogui
 import threading
-import socket
+import random
 from pet_ui import PetUI
 from pet_brain import PetBrain
-
+from pet_body import Pet
 def main():
     """Lightweight desktop overlay with clipboard monitoring"""
+    # Load pet data for stats/cosmetics
     try:
-        ui = PetUI()
-        brain = PetBrain(mode="default")  # Default mode for overlay
-    except Exception as e:
-        print(f"❌ Failed to initialize pet components: {e}")
-        return
-    
+        with open("pet_data.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError as e:
+        with open("default_pet_info.json", "r") as f:
+            data=json.load(f)
+            with open("pet_data.json", "w") as g:
+                json.dump(data, g)
+
+    ui = PetUI(size = pyautogui.size())
+    brain = PetBrain(mode="default")  # Default mode for overlay
     clock = pygame.time.Clock()
-    
+
+    pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10, data["equipped_hat"])
     # Clipboard monitoring
-    last_clipboard_check = 0
-    clipboard_check_interval = 0.5  # Check every 0.5 seconds
-    current_clipboard_text = None
-    
-    def start_ai_task(label, task_fn):
-        ui.show_loading(label)
-        def worker():
-            try:
-                result = task_fn()
-            except Exception as e:
-                result = f"❌ {label} failed: {str(e)}"
-                print(result)
-            print(f"✅ {label} completed")
-            ui.show_speech_bubble(result, duration=10)
-        threading.Thread(target=worker, daemon=True).start()
-    
-    # IPC server for real-time AI results from dashboard
-    def ipc_server():
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            server.bind(('localhost', 5002))
-            server.listen(1)
-            print("IPC server listening on port 5002")
-            while True:
-                conn, addr = server.accept()
-                data = conn.recv(1024).decode('utf-8')
-                if data:
-                    print(f"Received IPC message: {data[:50]}...")
-                    ui.show_speech_bubble(data, duration=10)
-                conn.close()
-        except Exception as e:
-            print(f"IPC server error: {e}")
-        finally:
-            server.close()
-    
-    # Start IPC server thread
-    ipc_thread = threading.Thread(target=ipc_server, daemon=True)
-    ipc_thread.start()
-    
+
     # Study Session Tracker
     session_start = time.time()
-    
-    # Show welcome message
-    ui.show_speech_bubble("Hello! I'm your AI study assistant. Copy some text and click me to access AI tools!", duration=5)
-    
-    # Focus monitoring
-    focus_check_interval = 2.0  # Check focus every 2 seconds
-    last_focus_check = 0
-    was_focusing = True  # Assume initially focused
-    focus_alert_cooldown = 0  # Prevent spam alerts
-    
+
     running = True
+    current_destination = pyautogui.position()
+    idle = 0
+    prev_mouse_pos = pyautogui.position()
     while running:
+        # Update pet data for stats/cosmetics
+        try:
+            with open("pet_data.json", "r") as f: # updates json data
+                data = json.load(f)
+        except json.decoder.JSONDecodeError:
+            # failed to open, skip for the frame
+            pass
+        pet.shown = data["overlay_enabled"]
+        pet.update_hat(data["equipped_hat"])
         current_time = time.time()
-        
-        # Check clipboard periodically
-        if current_time - last_clipboard_check >= clipboard_check_interval:
-            last_clipboard_check = current_time
-            new_clipboard_text = brain.check_clipboard()
-            
-            if new_clipboard_text:
-                current_clipboard_text = new_clipboard_text
-                ui.toggle_menu(True)
-                print(f"📋 Copied text: {current_clipboard_text[:50]}...")
-        
-        # Check focus status periodically (Focus mode only)
-        current_time = time.time()
-        if current_time - last_focus_check >= focus_check_interval:
-            last_focus_check = current_time
-            
-            # Load current mode
-            try:
-                with open("pet_data.json", "r") as f:
-                    data = json.load(f)
-                mode = data.get("mode", "default")
-            except:
-                mode = "default"
-            
-            if mode == "focus":
-                is_focusing_now = brain.is_focusing()
-                
-                # Alert when focus is lost (but not too frequently)
-                if was_focusing and not is_focusing_now and current_time > focus_alert_cooldown:
-                    ui.show_speech_bubble("⚠️ Focus lost! Look back at the screen to maintain focus mode.", duration=4)
-                    focus_alert_cooldown = current_time + 10  # Don't alert again for 10 seconds
-                    print("⚠️ Focus lost - user not looking at screen")
-                
-                # Alert when focus is regained
-                elif not was_focusing and is_focusing_now:
-                    ui.show_speech_bubble("✅ Focus regained! Keep studying!", duration=3)
-                    print("✅ Focus regained")
-                
-                was_focusing = is_focusing_now
+        if prev_mouse_pos == pyautogui.position():
+            idle += 1
+        else:
+            prev_mouse_pos = pyautogui.position()
+            idle = 0
+        if idle > 30 * 10:
+            pet.state = "follow"
+            ui.pet_speaks(pet, "Give me attention!", 5)
+
+        if pet.state == "follow":
+            current_destination = pyautogui.position()
+        # Handle pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            
-            # Mouse click detection for pet interaction
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                # Check if click is on the pet (roughly the center area)
-                pet_center_x, pet_center_y = 125, 110
-                distance = ((mouse_x - pet_center_x) ** 2 + (mouse_y - pet_center_y) ** 2) ** 0.5
-                if distance < 80:  # Pet radius + some margin
-                    # Toggle AI tools menu
-                    ui.toggle_menu()
-                    print(f"🐾 Pet clicked! AI tools menu toggled.")
-            
+
+            if event.type == pygame.MOUSEMOTION and pet.held_down:
+                current_destination = pyautogui.position()
+                dx,dy = event.rel
+                pet.speed = (dx**2 + dy**2)**0.5
+                pet.take_step(current_destination[0], current_destination[1])
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pet.collide(event.pos): # Pet is clicked on
+                    pet.held_down = True
+                    if event.button == 1:
+                        r_greeting = random.choice(["Hello!", "Hey!", "Stop..."])
+                        ui.pet_speaks(pet,r_greeting, 3)
+                    # Additional left click events
+                    if event.button == 3:
+                        ui.toggle_menu()
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if pet.held_down: # lets the pet go
+                    pet.held_down = False
+                    pet.speed = 10
+                    current_destination = pyautogui.position()
+                    pet.state = "stay"
+
             if event.type == pygame.KEYDOWN:
                 # Menu navigation
                 if ui.show_menu:
-                    if ui.show_translate_menu:
-                        # Navigate translate language menu
-                        if event.key == pygame.K_UP:
-                            ui.selected_option = (ui.selected_option - 1) % len(ui.translate_options)
-                        elif event.key == pygame.K_DOWN:
-                            ui.selected_option = (ui.selected_option + 1) % len(ui.translate_options)
-                        elif event.key == pygame.K_RETURN:
-                            # Execute translate with selected language
-                            language_option = ui.select_translate_option()
-                            if language_option:
-                                # Get clipboard content if we don't have it
-                                if not current_clipboard_text:
-                                    import pyperclip
-                                    current_clipboard_text = pyperclip.paste()
-                                    if not current_clipboard_text or not current_clipboard_text.strip():
-                                        print("⚠ No text in clipboard")
-                                        ui.show_speech_bubble("Please copy some text first!", duration=3)
-                                        ui.toggle_translate_menu(False)
-                                        continue
-                                
-                                target_language = language_option['language']
-                                print(f"🤖 Translating to {target_language}...")
-                                
-                                try:
-                                    clipboard_input = current_clipboard_text
-                                    start_ai_task(f"Translating to {target_language}...", lambda: brain.analyze_clipboard_text(clipboard_input, 'translate', target_language))
-                                except Exception as e:
-                                    error_msg = f"Translation error: {str(e)[:100]}"
-                                    print(f"❌ {error_msg}")
-                                    ui.show_speech_bubble(error_msg, duration=5)
+                    if event.key == pygame.K_UP:
+                        ui.selected_option = (ui.selected_option - 1) % len(ui.menu_options)
+                    elif event.key == pygame.K_DOWN:
+                        ui.selected_option = (ui.selected_option + 1) % len(ui.menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        # Execute selected action
+                        option = ui.select_menu_option()
+                        if option:
+                            clipboard_text = brain.check_clipboard()
+                            if not clipboard_text:
+                                # Restore from last copied text
+                                import pyperclip
+                                clipboard_text = pyperclip.paste()
                             
-                            ui.toggle_translate_menu(False)
-                            # Keep main menu open after translation
-                            # ui.toggle_menu(False)
-                        elif event.key == pygame.K_ESCAPE:
-                            ui.toggle_translate_menu(False)
-                    else:
-                        # Navigate main menu
-                        if event.key == pygame.K_UP:
-                            ui.selected_option = (ui.selected_option - 1) % len(ui.menu_options)
-                        elif event.key == pygame.K_DOWN:
-                            ui.selected_option = (ui.selected_option + 1) % len(ui.menu_options)
-                        elif event.key == pygame.K_RETURN:
-                            # Execute selected action
-                            option = ui.select_menu_option()
-                            if option:
-                                if option['intent'] == 'translate':
-                                    # Show translate language submenu
-                                    ui.toggle_translate_menu(True)
-                                elif option['intent'] == 'screen_study':
-                                    # Study screen content
-                                    print("🤖 Analyzing screen...")
-                                    start_ai_task("Analyzing screen...", lambda: brain.study_the_screen("Explain this study material for a student with ADHD."))
-                                else:
-                                    # Check if clipboard is required
-                                    requires_clipboard = option.get('requires_clipboard', True)
-                                    if requires_clipboard and not current_clipboard_text:
-                                        import pyperclip
-                                        current_clipboard_text = pyperclip.paste()
-                                        if not current_clipboard_text or not current_clipboard_text.strip():
-                                            print("⚠ No text in clipboard")
-                                            ui.show_speech_bubble("Please copy some text first!", duration=3)
-                                            ui.toggle_menu(False)
-                                            continue
-                                    
-                                    intent = option['intent']
-                                    clipboard_input = current_clipboard_text
-                                    print(f"🤖 Processing with '{intent}' intent...")
-                                    
-                                    if intent == "bionic":
-                                        # Bionic reading is immediate and does not require AI thread
-                                        response = brain.bionic_reading(clipboard_input)
-                                        print(f"✨ Bionic format:\n{response[:100]}...")
-                                        ui.show_speech_bubble(response, duration=10)
-                                    else:
-                                        start_ai_task(f"Running {option['label']}...", lambda: brain.analyze_clipboard_text(clipboard_input, intent))
-                        elif event.key == pygame.K_ESCAPE:
-                            ui.toggle_menu(False)
+                            intent = option['intent']
+                            print(f"🤖 Processing with '{intent}' intent...")
+                            
+                            # Get AI response
+                            if intent == "bionic":
+                                response = brain.bionic_reading(clipboard_text)
+                                print(f"✨ Bionic format:\n{response[:100]}...")
+                            else:
+                                response = brain.analyze_clipboard_text(clipboard_text, intent)
+                                print(f"🐾 {option['label']}:\n{response[:100]}...")
+                            
+                            # Show response in speech bubble
+                            ui.pet_speaks(pet, response, duration=8)
+                            
+                            # Also read aloud if not bionic
+                            if intent != "bionic":
+                                brain.text_to_speech(response)
+                        
+                        ui.toggle_menu(False)
+                    elif event.key == pygame.K_ESCAPE:
+                        ui.toggle_menu(False)
                 
                 # Global hotkeys
                 if event.key == pygame.K_c and event.mod & pygame.KMOD_CTRL:
                     # Ctrl+C - Already handled by OS, but we can trigger menu
-                    pass
-                elif event.key == pygame.K_a and event.mod & pygame.KMOD_ALT:
-                    # Alt+A - Show AI tools menu
-                    ui.toggle_menu(True)
-                    print("🎯 Alt+A pressed - AI tools menu activated")
-                elif event.key == pygame.K_ESCAPE and ui.show_menu:
-                    # ESC - Close menu
-                    ui.toggle_menu(False)
-                    print("❌ Menu closed with ESC")
-        
-        # Load pet data for stats/cosmetics
-        try:
-            with open("pet_data.json", "r") as f:
-                data = json.load(f)
-        except:
-            data = {}
-        
-        # Hide overlay if disabled from dashboard
-        if not data.get("overlay_enabled", True):
-            ui.show_speech_bubble("Overlay disabled. Reopen from dashboard.", duration=4)
-            break
-        
-        # Synchronize focus mode with the background brain
-        current_mode = data.get("mode", "default")
-        if current_mode != brain.mode:
-            brain.stop()
-            try:
-                brain = PetBrain(mode=current_mode)
-            except Exception as e:
-                print(f"⚠️ Failed to switch Brain mode: {e}")
-                brain = PetBrain(mode="default")
+                    clipboard_text = brain.check_clipboard()
+                    if clipboard_text:
+                        # Text copied! Show menu
+                        ui.toggle_menu(True)
+                        print(f"📋 Copied text: {clipboard_text[:50]}...")
+
+        # Movement logic
+        if abs(current_destination[0] - pet.x) > pet.size or abs(current_destination[1] - pet.y) > pet.size:
+            pet.take_step(current_destination[0], current_destination[1])
         
         # Draw pet overlay
-        focus_indicator = "lost" if (data.get("mode", "default") == "focus" and not was_focusing) else None
-        ui.draw(data.get("equipped_hat"), focus_indicator)
-        
+        ui.draw(pet)
+
         clock.tick(30)  # 30 FPS
     
     brain.stop()
-    try:
-        pygame.quit()
-    except NameError:
-        # pygame might not be defined if import failed
-        pass
+    pygame.quit()
 
 if __name__ == "__main__":
     main()
