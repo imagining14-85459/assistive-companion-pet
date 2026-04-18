@@ -3,6 +3,8 @@ import pyautogui
 import pyttsx3
 import pyperclip
 from dotenv import load_dotenv
+import time
+import threading
 
 try:
     import google.generativeai as genai
@@ -30,12 +32,14 @@ if AI_AVAILABLE:
         print(f"⚠️ Failed to configure AI model: {e}")
         AI_AVAILABLE = False
 
-MAX_AI_INPUT_LENGTH = 1500
+MAX_AI_INPUT_LENGTH = 2000  # Increased from 1500 since we're not truncating messages now
 
 class PetBrain:
     # Class-level rate limiting to prevent API quota exhaustion
     _last_api_call = 0
-    _min_call_interval = 10  # Minimum 10 seconds between API calls
+    _min_call_interval = 25  # Increased from 10 to 25 seconds between API calls to reduce 429 errors
+    _api_call_lock = threading.Lock()  # Prevent concurrent API calls
+    _is_api_busy = False  # Flag to track if an API call is in progress
     
     def __init__(self, mode="default"):
         self.mode = mode
@@ -69,13 +73,31 @@ class PetBrain:
             self.last_seen = __import__('time').time()
 
     def _check_rate_limit(self):
-        """Check if we can make an API call (rate limiting)"""
-        import time
-        current_time = time.time()
-        if current_time - PetBrain._last_api_call < PetBrain._min_call_interval:
-            return False
-        PetBrain._last_api_call = current_time
-        return True
+        """Check if we can make an API call (rate limiting with concurrent request prevention)"""
+        with PetBrain._api_call_lock:
+            current_time = time.time()
+            time_since_last_call = current_time - PetBrain._last_api_call
+            
+            # Check if we're too soon after last call
+            if time_since_last_call < PetBrain._min_call_interval:
+                seconds_remaining = int(PetBrain._min_call_interval - time_since_last_call)
+                print(f"⏱️ Rate limit active. Please wait {seconds_remaining} seconds before next AI request.")
+                return False
+            
+            # Check if another API call is already in progress
+            if PetBrain._is_api_busy:
+                print("⏱️ An AI request is already being processed. Please wait...")
+                return False
+            
+            # Mark that we're about to make an API call
+            PetBrain._is_api_busy = True
+            PetBrain._last_api_call = current_time
+            return True
+    
+    def _release_api_lock(self):
+        """Release the API call lock after completion"""
+        with PetBrain._api_call_lock:
+            PetBrain._is_api_busy = False
 
     def check_clipboard(self):
         """Check if clipboard content has changed"""
@@ -103,40 +125,71 @@ class PetBrain:
         
         return " ".join(bionic_text)
 
+    def eye_aspect_ratio(self, landmarks, eye_indices):
+        """Calculate Eye Aspect Ratio for blink detection"""
+        points = [(landmarks[i].x, landmarks[i].y) for i in eye_indices]
+        p1, p2, p3, p4, p5, p6 = points
+        # EAR = (|p2.y - p6.y| + |p3.y - p5.y|) / (2 * |p1.x - p4.x|)
+        ear = (abs(p2[1] - p6[1]) + abs(p3[1] - p5[1])) / (2 * abs(p1[0] - p4[0]))
+        return ear
+
     def is_focusing(self):
-        """Check if user is focused (Focus mode only)"""
-        if self.mode != "focus" or not self.face_mesh:
-            return True  # Always return True in Default mode
+        """Check if user is focused using face and eye detection"""
+        if self.mode != "focus" or not self.face_mesh or not self.cap:
+            return True  # Always return True in Default mode or if no camera
         
         import time
         ret, frame = self.cap.read()
-        if not ret: return False
+        if not ret:
+            return False
+        
         results = self.face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        if results.multi_face_landmarks:
+        
+        if not results.multi_face_landmarks:
+            # No face detected - check if recently seen
+            return (time.time() - self.last_seen) < 3
+        
+        # Get landmarks from first detected face
+        landmarks = results.multi_face_landmarks[0].landmark
+        
+        # Eye landmark indices (MediaPipe face mesh)
+        left_eye_indices = [33, 160, 158, 133, 153, 144]
+        right_eye_indices = [362, 385, 387, 263, 373, 380]
+        
+        left_ear = self.eye_aspect_ratio(landmarks, left_eye_indices)
+        right_ear = self.eye_aspect_ratio(landmarks, right_eye_indices)
+        
+        # Consider focused if face detected AND both eyes are open (EAR > 0.25)
+        if left_ear > 0.25 and right_ear > 0.25:
             self.last_seen = time.time()
             return True
-        return (time.time() - self.last_seen) < 3
+        
+        return False
 
     def study_the_screen(self, question="Explain this study material for a student with ADHD."):
         """Analyze screen for study assistance"""
         pyautogui.screenshot("study_session.png")
         if self.model is None:
             return "🤖 AI unavailable. Set GEMINI_API_KEY in .env or install google-generativeai to use AI tools."
+        
+        if not self._check_rate_limit():
+            seconds_remaining = int(PetBrain._min_call_interval - (time.time() - PetBrain._last_api_call))
+            return f"🤖 Rate limited. Please wait {max(1, seconds_remaining)} seconds before the next request."
+        
         try:
-            # Check rate limit for API calls
-            if not self._check_rate_limit():
-                return "🤖 Please wait a moment before making another AI request (rate limited to prevent quota issues)."
-            
             response = self.model.generate_content([question, "study_session.png"])
             return response.text
         except Exception as e:
+            self._release_api_lock()
             error_str = str(e)
             if "429" in error_str or "quota" in error_str.lower():
-                return "🤖 AI service temporarily unavailable due to high usage. Please try again in a few minutes, or use the web dashboard for screen analysis."
+                return "🤖 API quota exceeded. Please wait a few minutes and try again."
             elif "403" in error_str or "forbidden" in error_str.lower():
-                return "🤖 AI service access denied. Please check your API key configuration."
+                return "🤖 API access denied. Verify your GEMINI_API_KEY configuration."
             else:
                 return f"🤖 Error analyzing screen: {error_str[:80]}{'...' if len(error_str) > 80 else ''}"
+        finally:
+            self._release_api_lock()
 
     def analyze_clipboard_text(self, text, intent, target_language=None):
         """Analyze copied text with specific intent
@@ -149,70 +202,77 @@ class PetBrain:
             if self.model is None:
                 return "🤖 AI unavailable. Set GEMINI_API_KEY in .env or install google-generativeai to use AI tools."
             
-            # Guard against overly large inputs to keep single queries within rate and token limits.
-            if len(text) > MAX_AI_INPUT_LENGTH:
-                text = text[:MAX_AI_INPUT_LENGTH].rstrip() + "\n\n...[truncated for rate limit]"
-            
             # Check rate limit for API calls
             if not self._check_rate_limit():
-                return "🤖 Please wait a moment before making another AI request (rate limited to prevent quota issues)."
+                seconds_remaining = int(PetBrain._min_call_interval - (time.time() - PetBrain._last_api_call))
+                return f"🤖 Rate limited. Please wait {max(1, seconds_remaining)} seconds before the next request."
             
-            if intent == "simplify":
-                prompt = "Review and explain this text for a student with ADHD. Provide a clear summary, key concepts, and helpful study tips."
-            elif intent == "translate":
-                if target_language:
-                    prompt = f"Translate this to {target_language} and keep it concise."
+            try:
+                # Truncate input if needed to prevent token limit issues
+                if len(text) > MAX_AI_INPUT_LENGTH:
+                    text = text[:MAX_AI_INPUT_LENGTH].rstrip()
+                
+                if intent == "simplify":
+                    prompt = "Review and explain this text for a student with ADHD. Provide a clear summary, key concepts, and helpful study tips. Keep your response concise and practical."
+                elif intent == "translate":
+                    if target_language:
+                        prompt = f"Translate this to {target_language}. Keep the translation concise and natural-sounding."
+                    else:
+                        prompt = "Translate this to Spanish. Keep it concise."
+                elif intent == "explain":
+                    prompt = "Explain the key concepts in this text clearly and simply for a student. Use simple language."
                 else:
-                    # Default to Spanish if no language specified
-                    prompt = "Translate this to Spanish and keep it concise."
-            elif intent == "explain":
-                prompt = "Explain the key concepts in this text clearly and simply."
-            else:
-                prompt = "Analyze this text and provide helpful information."
-            
-            response = self.model.generate_content(prompt + "\n\nText to analyze:\n" + text)
-            result = response.text
-            
-            # Track learning for simplify/translate intents
-            if intent in ['simplify', 'translate']:
-                self.track_learning_topic(text, intent)
-            
-            return result
+                    prompt = "Analyze this text and provide helpful information."
+                
+                response = self.model.generate_content(prompt + "\n\nText:\n" + text)
+                result = response.text
+                
+                # Track learning for simplify/translate intents
+                if intent in ['simplify', 'translate']:
+                    self.track_learning_topic(text, intent)
+                
+                return result
+            finally:
+                self._release_api_lock()
+                
         except Exception as e:
+            self._release_api_lock()
             error_str = str(e)
             # Handle common API errors with user-friendly messages
             if "429" in error_str or "quota" in error_str.lower():
-                return "🤖 AI service temporarily unavailable due to high usage. Please try again in a few minutes, or use the web dashboard for AI tools."
+                return "🤖 API quota exceeded. Please wait a few minutes and try again. Consider using the web dashboard for analysis."
             elif "403" in error_str or "forbidden" in error_str.lower():
-                return "🤖 AI service access denied. Please check your API key configuration."
+                return "🤖 API access denied. Please verify your GEMINI_API_KEY in the .env file."
             elif "network" in error_str.lower() or "connection" in error_str.lower():
-                return "🤖 Network error. Please check your internet connection and try again."
+                return "🤖 Network error. Check your internet connection and try again."
             else:
-                # Generic error with truncated message
-                return f"🤖 Error: {error_str[:100]}{'...' if len(error_str) > 100 else ''}"
+                return f"🤖 Error processing text: {error_str[:100]}{'...' if len(error_str) > 100 else ''}"
 
     def explain_image(self, image_path, question="What is this?"):
         """Explain a specific image or diagram"""
         if self.model is None:
             return "🤖 AI unavailable. Set GEMINI_API_KEY in .env or install google-generativeai to use AI tools."
+        
+        if not self._check_rate_limit():
+            seconds_remaining = int(PetBrain._min_call_interval - (time.time() - PetBrain._last_api_call))
+            return f"🤖 Rate limited. Please wait {max(1, seconds_remaining)} seconds before the next request."
+        
         try:
-            # Check rate limit for API calls
-            if not self._check_rate_limit():
-                return "🤖 Please wait a moment before making another AI request (rate limited to prevent quota issues)."
-            
-            # Load the image properly for Gemini API
             import PIL.Image
             image = PIL.Image.open(image_path)
             response = self.model.generate_content([question, image])
             return response.text
         except Exception as e:
+            self._release_api_lock()
             error_str = str(e)
             if "429" in error_str or "quota" in error_str.lower():
-                return "🤖 AI service temporarily unavailable due to high usage. Please try again in a few minutes."
+                return "🤖 API quota exceeded. Please wait a few minutes."
             elif "403" in error_str or "forbidden" in error_str.lower():
-                return "🤖 AI service access denied. Please check your API key configuration."
+                return "🤖 API access denied. Check your GEMINI_API_KEY."
             else:
                 return f"🤖 Error analyzing image: {error_str[:80]}{'...' if len(error_str) > 80 else ''}"
+        finally:
+            self._release_api_lock()
 
     def text_to_speech(self, text):
         """Read text aloud for accessibility (helpful for ESL learners)"""

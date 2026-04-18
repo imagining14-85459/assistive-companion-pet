@@ -1,4 +1,37 @@
 {
     "overlay_enabled": true,
-    "dashboard_last_seen": 1776539419.8460724
+    "dashboard_last_seen": 1776550024.1537032,
+    "dashboard_tab_count": 1,
+    "font_size": 15,
+    "study_session": {
+        "active": true,
+        "start_time": 1776547897.828197
+    },
+    "mode": "default",
+    "learning_history": [
+        {
+            "topic": "The coefficient of variation, or CV, is the standard deviation divided by",
+            "original_text": "The coefficient of variation, or CV, is the standard deviation divided by the mean. The CV is used t...",
+            "intent": "simplify",
+            "timestamp": 1776547958.0519996
+        },
+        {
+            "topic": "I'll help you fix the 429 rate-limiting errors and make the desktop",
+            "original_text": "I'll help you fix the 429 rate-limiting errors and make the desktop pet draggable. Let me first expl...",
+            "intent": "simplify",
+            "timestamp": 1776548757.5072367
+        },
+        {
+            "topic": "I'll help you fix the 429 rate-limiting errors and make the desktop",
+            "original_text": "I'll help you fix the 429 rate-limiting errors and make the desktop pet draggable. Let me first expl...",
+            "intent": "simplify",
+            "timestamp": 1776548757.5072367
+        },
+        {
+            "topic": "I'll help you fix the 429 rate-limiting errors and make the desktop",
+            "original_text": "I'll help you fix the 429 rate-limiting errors and make the desktop pet draggable. Let me first expl...",
+            "intent": "simplify",
+            "timestamp": 1776548802.3594668
+        }
+    ]
 }
