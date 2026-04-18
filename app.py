@@ -56,6 +56,11 @@ def get_pet_data():
         data['overlay_enabled'] = True
         save_pet_data(data)
     
+    # Give default large currency for testing shop
+    if 'currency' not in data:
+        data['currency'] = 10000
+        save_pet_data(data)
+    
     return data
 
 def save_pet_data(data):
