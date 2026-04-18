@@ -4,735 +4,1292 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aether Assistant - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --parchment: #f5e6c8;
+            --parchment-dark: #e8d5a8;
+            --parchment-darker: #d4b87a;
+            --wood-dark: #5c3a1e;
+            --wood-mid: #7a4e2d;
+            --wood-light: #a06030;
+            --green-field: #5a8a3c;
+            --green-light: #7ec850;
+            --green-pale: #c8e8a0;
+            --orange-warm: #d4782a;
+            --orange-light: #f0a855;
+            --red-berry: #c03030;
+            --red-light: #e85050;
+            --blue-sky: #5090d8;
+            --blue-light: #80c0f0;
+            --purple-magic: #8868c8;
+            --purple-light: #b098e8;
+            --gold: #e8b820;
+            --gold-light: #f8d840;
+            --cream: #fdf6e3;
+            --pixel-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+            --border-wood: 4px solid var(--wood-dark);
+            --inner-border: 2px solid var(--parchment-darker);
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
+
+        @font-face { font-display: swap; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Nunito', sans-serif;
+            background: #87CEEB;
+            background-image:
+                linear-gradient(180deg, #87CEEB 0%, #b8e0f7 40%, #7ec850 40%, #5a8a3c 60%),
+                radial-gradient(ellipse at 20% 38%, white 0%, transparent 8%),
+                radial-gradient(ellipse at 50% 35%, white 0%, transparent 10%),
+                radial-gradient(ellipse at 80% 37%, white 0%, transparent 7%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 16px 60px;
+            position: relative;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(1px 1px at 15% 10%, white 0%, transparent 100%),
+                radial-gradient(1px 1px at 35% 7%, white 0%, transparent 100%),
+                radial-gradient(1.5px 1.5px at 55% 12%, white 0%, transparent 100%),
+                radial-gradient(1px 1px at 75% 8%, white 0%, transparent 100%),
+                radial-gradient(1px 1px at 90% 15%, white 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
         }
-        
-        header {
+
+        .container { max-width: 1080px; margin: 0 auto; position: relative; z-index: 1; }
+
+        /* ─── PIXEL PANEL BASE ─── */
+        .sdv-panel {
+            background: var(--parchment);
+            border: 5px solid var(--wood-dark);
+            border-radius: 4px;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.5), inset 0 0 0 2px var(--parchment-darker);
+            position: relative;
+        }
+
+        .sdv-panel::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border: 1px solid var(--parchment-darker);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* ─── SCROLL BANNER HEADER ─── */
+        .scroll-header {
             text-align: center;
-            color: white;
-            margin-bottom: 30px;
+            margin-bottom: 22px;
+            position: relative;
         }
-        
-        header h1 {
-            font-size: 2.5em;
+
+        .scroll-banner {
+            display: inline-block;
+            background: var(--parchment);
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 14px 48px 10px;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
+            position: relative;
+            margin-bottom: 6px;
+        }
+
+        .scroll-banner::before,
+        .scroll-banner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px; height: 44px;
+            background: var(--wood-mid);
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+        }
+        .scroll-banner::before { left: -18px; }
+        .scroll-banner::after  { right: -18px; }
+
+        .scroll-banner h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.5em;
+            color: var(--wood-dark);
+            text-shadow: 2px 2px 0 var(--parchment-darker);
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+        }
+
+        .mascot-wrap {
+            font-size: 52px;
+            display: block;
+            margin-bottom: 4px;
+            animation: float 2.5s ease-in-out infinite;
+            filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+
+        .tagline {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.52em;
+            color: var(--wood-mid);
+            margin-top: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        /* ─── PIXEL BADGE ─── */
+        .pixel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--gold);
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 5px 14px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45em;
+            color: var(--wood-dark);
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
             margin-bottom: 10px;
         }
-        
+
+        /* ─── NAV TABS ─── */
         .nav-tabs {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 5px;
+            gap: 6px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
         }
-        
+
         .nav-tab {
-            background: transparent;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 1em;
+            background: var(--parchment-dark);
+            color: var(--wood-dark);
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.5em;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: transform 0.1s, background 0.15s;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
+            letter-spacing: 0.02em;
+            line-height: 1.5;
         }
-        
+
+        .nav-tab:hover {
+            background: var(--orange-light);
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.35);
+        }
+
         .nav-tab.active {
-            background: white;
-            color: #667eea;
-            font-weight: bold;
+            background: var(--gold);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
+            transform: translate(2px, 2px);
         }
-        
-        .page {
-            display: none;
-        }
-        
+
+        .nav-tab:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 rgba(0,0,0,0.35); }
+
+        /* ─── PAGES ─── */
+        .page { display: none; }
         .page.active {
             display: block;
+            animation: pageIn 0.25s ease both;
         }
-        
+
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── GRID ─── */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+            margin-bottom: 14px;
         }
-        
+
+        /* ─── CARD ─── */
         .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--parchment);
+            border: 5px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 18px;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
+            position: relative;
+            transition: transform 0.12s, box-shadow 0.12s;
+            animation: cardIn 0.35s ease both;
         }
-        
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card:nth-child(1) { animation-delay: 0.04s; }
+        .card:nth-child(2) { animation-delay: 0.08s; }
+        .card:nth-child(3) { animation-delay: 0.12s; }
+        .card:nth-child(4) { animation-delay: 0.16s; }
+
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0 rgba(0,0,0,0.4);
         }
-        
-        .stats-card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3em;
+
+        /* ─── SECTION TITLE BANNER ─── */
+        .section-title {
+            background: var(--wood-mid);
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 7px 14px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.58em;
+            color: var(--gold-light);
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+            letter-spacing: 0.04em;
         }
-        
+
+        /* ─── STAT ROWS ─── */
         .stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px 0;
-            font-size: 1.1em;
+            padding: 8px 0;
+            border-bottom: 2px dashed var(--parchment-darker);
+            font-size: 0.9em;
+            color: var(--wood-dark);
+            font-weight: 700;
         }
-        
+
+        .stat-item:last-of-type { border-bottom: none; }
+
         .stat-value {
-            color: #764ba2;
-            font-weight: bold;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75em;
+            color: var(--orange-warm);
+            display: inline-block;
         }
-        
-        .xp-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
+
+        .stat-value.pop { animation: statPop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+
+        @keyframes statPop {
+            0%   { transform: scale(1); }
+            45%  { transform: scale(1.4); color: var(--gold); }
+            100% { transform: scale(1); }
         }
-        
-        .xp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transition: width 0.3s;
-        }
-        
-        .mode-toggle {
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        .mode-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .mode-btn:hover {
-            background: #764ba2;
-        }
-        
-        .mode-btn.focus {
-            background: #ff6b6b;
-        }
-        
-        .mode-btn.focus:hover {
-            background: #ee5a52;
-        }
-        
-        .shop-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        
-        .shop-item {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
+
+        /* ─── XP BAR ─── */
+        .xp-label {
             display: flex;
             justify-content: space-between;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45em;
+            color: var(--wood-mid);
+            margin: 10px 0 5px;
+        }
+
+        .xp-bar {
+            width: 100%;
+            height: 18px;
+            background: var(--parchment-darker);
+            border: 3px solid var(--wood-dark);
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-light) 0%, var(--gold) 100%);
+            transition: width 0.7s cubic-bezier(.4,0,.2,1);
+            position: relative;
+        }
+
+        .xp-fill::after {
+            content: '';
+            position: absolute;
+            top: 3px; right: 4px;
+            width: 5px; height: 5px;
+            background: white;
+            opacity: 0.7;
+        }
+
+        /* ─── MODE BADGE ─── */
+        .mode-badge {
+            display: inline-flex;
             align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.48em;
+            margin-bottom: 12px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            letter-spacing: 0.03em;
         }
-        
-        .shop-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+
+        .mode-badge.default { background: var(--blue-light); color: var(--wood-dark); }
+        .mode-badge.focus   { background: var(--red-light);  color: white; }
+
+        .mode-badge .dot {
+            width: 8px; height: 8px;
+            border: 2px solid rgba(0,0,0,0.3);
+        }
+        .mode-badge.default .dot { background: var(--blue-sky); }
+        .mode-badge.focus   .dot { background: var(--red-berry); animation: blink 0.8s infinite; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.1; }
+        }
+
+        /* ─── PIXEL BUTTONS ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.46em;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%;
+            letter-spacing: 0.03em;
+            line-height: 1.6;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
         }
-        
-        .shop-btn:hover {
-            background: #764ba2;
+
+        .btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.35);
         }
-        
-        .shop-btn:disabled {
-            background: #ccc;
+
+        .btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 1px 1px 0 rgba(0,0,0,0.25);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
         }
-        
-        .webcam-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
+
+        .btn-primary { background: var(--green-field); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--green-light); }
+
+        .btn-danger { background: var(--red-berry); color: white; }
+        .btn-danger:hover:not(:disabled) { background: var(--red-light); }
+
+        .btn-outline { background: var(--parchment-dark); color: var(--wood-dark); }
+        .btn-outline:hover { background: var(--orange-light); }
+
+        .btn-gold { background: var(--gold); color: var(--wood-dark); }
+        .btn-gold:hover:not(:disabled) { background: var(--gold-light); }
+
+        /* ─── MODE DESC ─── */
+        .mode-desc {
+            background: rgba(0,0,0,0.06);
+            border: 2px dashed var(--parchment-darker);
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 0.82em;
+            color: var(--wood-mid);
+            line-height: 1.65;
+            margin-top: 12px;
+            font-weight: 600;
         }
-        
+
+        .mode-desc strong { color: var(--wood-dark); font-weight: 800; }
+
+        /* ─── OVERLAY PILL ─── */
+        .overlay-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.47em;
+            margin-bottom: 12px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+        }
+
+        .overlay-pill.on  { background: var(--green-pale); color: var(--green-field); }
+        .overlay-pill.off { background: #f8d0d0; color: var(--red-berry); }
+
+        /* ─── SHOP ─── */
+        .shop-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 3px solid var(--parchment-darker);
+            border-radius: 4px;
+            background: var(--cream);
+            margin-bottom: 10px;
+            transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+        }
+
+        .shop-item:hover {
+            border-color: var(--wood-mid);
+            transform: translateX(4px);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .item-emoji {
+            width: 44px; height: 44px;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            background: var(--parchment-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .item-info { flex: 1; }
+
+        .item-name {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.52em;
+            color: var(--wood-dark);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .item-price {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--gold);
+            color: var(--wood-dark);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.42em;
+            padding: 3px 9px;
+            border: 2px solid var(--wood-dark);
+            border-radius: 3px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        }
+
+        .shop-btn {
+            background: var(--green-field);
+            color: white;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.44em;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+            flex-shrink: 0;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            letter-spacing: 0.02em;
+        }
+
+        .shop-btn:hover:not(:disabled) {
+            background: var(--green-light);
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+        }
+
+        .shop-btn:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(0,0,0,0.2); }
+
+        .shop-btn:disabled {
+            background: var(--parchment-darker);
+            color: var(--wood-mid);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+        }
+
+        /* ─── WEBCAM ─── */
         .webcam-placeholder {
             width: 100%;
-            height: 200px;
-            background: #000;
-            border-radius: 10px;
+            height: 210px;
+            background: #1a1a2e;
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #7a8fa8;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.46em;
+            gap: 12px;
+            margin: 12px 0;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 3px 3px 0 rgba(0,0,0,0.3);
+            letter-spacing: 0.04em;
+        }
+
+        .webcam-icon-wrap {
+            width: 64px; height: 64px;
+            border: 3px solid #3a4a6a;
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            background: #0f1528;
+        }
+
+        .webcam-inactive-label { color: #9098c8; font-size: 1.1em; }
+        .webcam-inactive-sub { color: #3a3a5a; font-size: 0.8em; }
+
+        .webcam-live-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0 5px;
+            padding: 8px 12px;
+            background: #2a0808;
+            border: 3px solid var(--red-berry);
+            border-radius: 4px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .live-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.44em;
+            color: #f08090;
+        }
+
+        .live-dot::before {
+            content: '';
+            width: 8px; height: 8px;
+            background: var(--red-light);
+            animation: blink 0.8s infinite;
+        }
+
+        .streak-chip {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.44em;
+            color: var(--gold);
+        }
+
+        .webcam-controls { display: flex; gap: 10px; margin-top: 10px; }
+        .webcam-controls .btn { font-size: 0.44em; padding: 10px 14px; }
+
+        .focus-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 14px 0 4px;
+        }
+
+        .focus-stat-chip {
+            background: var(--cream);
+            border: 3px solid var(--parchment-darker);
+            border-radius: 4px;
+            padding: 12px 8px;
+            text-align: center;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+            transition: transform 0.12s;
+        }
+
+        .focus-stat-chip:hover { transform: scale(1.04); border-color: var(--wood-mid); }
+
+        .focus-stat-chip .fsc-val {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75em;
+            color: var(--orange-warm);
+            display: block;
+        }
+
+        .focus-stat-chip .fsc-lbl {
+            font-size: 0.72em;
+            font-weight: 700;
+            color: var(--wood-mid);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .focus-alert {
+            background: #4a0808;
+            color: #f08090;
+            border: 4px solid var(--red-light);
+            border-radius: 4px;
+            padding: 14px 18px;
+            text-align: center;
+            margin-top: 12px;
+            animation: alertPulse 0.7s ease-in-out infinite;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.5em;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            margin: 10px 0;
-        }
-        
-        .webcam-controls {
-            display: flex;
             gap: 10px;
-            margin-top: 15px;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+            letter-spacing: 0.04em;
+            line-height: 1.7;
         }
-        
-        .webcam-btn {
-            flex: 1;
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
+
+        @keyframes alertPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); border-color: white; }
         }
-        
-        .webcam-btn:hover {
-            background: #764ba2;
+
+        /* ─── LEARNING ─── */
+        .learning-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border: 3px solid var(--parchment-darker);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: var(--cream);
+            transition: transform 0.12s, border-color 0.15s;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
         }
-        
-        .webcam-btn.stop {
-            background: #ff6b6b;
+
+        .learning-item:hover {
+            transform: translateX(4px);
+            border-color: var(--orange-warm);
         }
-        
-        .webcam-btn.stop:hover {
-            background: #ee5a52;
+
+        .learning-item.top {
+            background: #e8f8d0;
+            border-color: var(--green-field);
         }
-        
-        .focus-alert {
-            background: #ff6b6b;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
+
+        .topic-name {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.5em;
+            color: var(--wood-dark);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+            line-height: 1.6;
+        }
+
+        .learning-item.top .topic-name { color: var(--green-field); }
+
+        .topic-count { font-size: 0.78em; font-weight: 700; color: var(--wood-mid); }
+
+        .rank-badge {
+            width: 32px; height: 32px;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            background: var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.44em;
+            color: var(--wood-dark);
+            flex-shrink: 0;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .rank-badge.regular { background: var(--parchment-dark); }
+
+        .tips-box {
+            margin-top: 18px;
+            background: #fff8e8;
+            border: 3px solid var(--gold);
+            border-radius: 4px;
+            padding: 16px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        }
+
+        .tips-box h4 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.52em;
+            color: var(--wood-dark);
+            margin-bottom: 10px;
+            letter-spacing: 0.03em;
+        }
+
+        .tips-box ul { list-style: none; font-size: 0.86em; color: var(--wood-mid); line-height: 1.8; font-weight: 700; }
+        .tips-box ul li::before { content: '🌾 '; }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
             text-align: center;
-            margin-top: 15px;
-            animation: pulse 1s infinite;
+            padding: 36px 18px;
+            color: var(--wood-mid);
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45em;
+            line-height: 2;
+            letter-spacing: 0.03em;
         }
-        
-        .alert-icon {
-            font-size: 2em;
-            margin-bottom: 5px;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .mode-indicator {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            background: #667eea;
-            color: white;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        
-        .mode-indicator.focus {
-            background: #ff6b6b;
-        }
-        
+
+        .empty-state .empty-icon { font-size: 3.5em; margin-bottom: 12px; }
+
+        /* ─── NOTIFICATION ─── */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: none;
+            top: 20px; right: 20px;
+            background: var(--parchment);
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            padding: 12px 18px;
             z-index: 1000;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.48em;
+            color: var(--wood-dark);
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
+            max-width: 300px;
+            letter-spacing: 0.02em;
+            line-height: 1.7;
+            opacity: 0;
+            transform: translateX(330px);
+            transition: opacity 0.25s, transform 0.3s cubic-bezier(0.34,1.45,0.64,1);
+            display: none;
         }
-        
+
         .notification.show {
-            display: block;
-            animation: slideIn 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 1;
+            transform: translateX(0);
         }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-            }
-            to {
-                transform: translateX(0);
-            }
+
+        .notification.hiding {
+            opacity: 0;
+            transform: translateX(330px);
+        }
+
+        /* ─── PIXEL DIVIDER ─── */
+        .pixel-divider {
+            height: 4px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--parchment-darker) 0px,
+                var(--parchment-darker) 8px,
+                transparent 8px,
+                transparent 12px
+            );
+            margin: 12px 0;
+            border-radius: 2px;
+        }
+
+        /* ─── CANVAS ─── */
+        #webcam-canvas {
+            display: none;
+            width: 100%;
+            border: 4px solid var(--wood-dark);
+            border-radius: 4px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+        }
+
+        /* ─── CARD ICON ─── */
+        .card-icon {
+            width: 42px; height: 42px;
+            border: 3px solid var(--wood-dark);
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .card-icon.purple { background: #d8c8f8; }
+        .card-icon.pink   { background: #f8c8d8; }
+        .card-icon.amber  { background: #f8e4a8; }
+        .card-icon.teal   { background: #c0f0e8; }
+
+        /* ─── STAR DECORATIONS ─── */
+        .star-deco {
+            position: absolute;
+            font-size: 14px;
+            opacity: 0.5;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .scroll-banner h1 { font-size: 1em; }
+            .nav-tab { font-size: 0.42em; padding: 8px 14px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🐾 Aether Assistant Dashboard</h1>
-            <p>Your AI-Powered Study Companion</p>
-        </header>
-        
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showPage('overview')">Overview</button>
-            <button class="nav-tab" onclick="showPage('webcam')">Focus Cam</button>
-            <button class="nav-tab" onclick="showPage('shop')">Shop</button>
-            <button class="nav-tab" onclick="showPage('learning')">Learning</button>
+<div class="container">
+
+    <!-- HEADER -->
+    <header style="text-align:center; margin-bottom:22px; animation: pageIn 0.5s ease both;">
+        <span class="mascot-wrap">🐾</span>
+        <div class="pixel-badge">✦ AI-Powered Study Companion ✦</div>
+        <div class="scroll-banner">
+            <h1>Aether Assistant</h1>
+            <div class="tagline">Let's make studying fun today!</div>
         </div>
-        
-        <!-- Overview Page -->
-        <div class="page active" id="overview-page">
-            <div class="dashboard-grid">
-                <!-- Stats Card -->
-                <div class="card stats-card">
-                    <h2>📊 Stats</h2>
-                    <div class="stat-item">
-                        <span>Level:</span>
-                        <span class="stat-value" id="level">1</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Coins:</span>
-                        <span class="stat-value" id="currency">100</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>XP Progress:</span>
-                    </div>
-                    <div class="xp-bar">
-                        <div class="xp-fill" id="xp-fill" style="width: 0%"></div>
-                    </div>
-                    <div style="font-size: 0.9em; color: #999; margin-top: 5px;">
-                        <span id="xp-text">0/100</span>
-                    </div>
+    </header>
+
+    <!-- NAV -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('overview', event)">🏠 Overview</button>
+        <button class="nav-tab" onclick="showPage('webcam', event)" id="webcam-tab">📹 Focus Cam</button>
+        <button class="nav-tab" onclick="showPage('shop', event)">🛍️ Shop</button>
+        <button class="nav-tab" onclick="showPage('learning', event)">📚 Learning</button>
+    </div>
+
+    <!-- ══ OVERVIEW ══ -->
+    <div class="page active" id="overview-page">
+        <div class="dashboard-grid">
+
+            <!-- STATS -->
+            <div class="card">
+                <div class="card-icon purple">⚡</div>
+                <div class="section-title">⚡ Your Stats</div>
+                <div class="stat-item">
+                    <span>Level</span>
+                    <span class="stat-value" id="level">1</span>
                 </div>
-                
-                <!-- Mode Toggle Card -->
-                <div class="card stats-card">
-                    <h2>🎯 Study Mode</h2>
-                    <div class="mode-indicator" id="mode-indicator">📚 Default Mode</div>
-                    <div class="mode-toggle">
-                        <button class="mode-btn" id="mode-btn">Switch to Focus Mode</button>
-                    </div>
-                    <p style="font-size: 0.9em; color: #666; margin-top: 15px;">
-                        <strong>Default:</strong> Earn rewards just by studying<br>
-                        <strong>Focus:</strong> Face detection with alerts
-                    </p>
+                <div class="stat-item">
+                    <span>Coins 🪙</span>
+                    <span class="stat-value" id="currency">100</span>
                 </div>
-                
-                <!-- Study Time Card -->
-                <div class="card stats-card">
-                    <h2>⏱️ Study Time</h2>
-                    <div class="stat-item">
-                        <span>Total Study Time:</span>
-                        <span class="stat-value" id="total-time">0h 0m</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Current Session:</span>
-                        <span class="stat-value" id="session-time">0m 0s</span>
-                    </div>
+                <div class="xp-label">
+                    <span>XP Progress</span>
+                    <span id="xp-text">0 / 100</span>
                 </div>
-                
-                <!-- Overlay Toggle Card -->
-                <div class="card stats-card">
-                    <h2>🖥️ Desktop Buddy</h2>
-                    <div class="mode-indicator" id="overlay-indicator">🐾 Overlay Active</div>
-                    <div class="mode-toggle">
-                        <button class="mode-btn" id="overlay-btn">Disable Overlay</button>
-                    </div>
-                    <p style="font-size: 0.9em; color: #666; margin-top: 15px;">
-                        Toggle the floating pet overlay that appears when you copy text.
-                    </p>
+                <div class="xp-bar">
+                    <div class="xp-fill" id="xp-fill" style="width:0%"></div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Webcam Page -->
-        <div class="page" id="webcam-page">
-            <div class="card webcam-card">
-                <h3>📹 Focus Detection Camera</h3>
-                <div id="webcam-container">
-                    <div class="webcam-placeholder" id="webcam-placeholder">
-                        <div style="text-align: center;">
-                            <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
-                            <div>Webcam Inactive</div>
-                            <div style="font-size: 0.9em; color: #666; margin-top: 10px;">Enable Focus Mode to start face detection</div>
-                        </div>
-                    </div>
-                    <canvas id="webcam-canvas" style="display: none; width: 100%; border-radius: 10px;"></canvas>
+
+            <!-- MODE -->
+            <div class="card">
+                <div class="card-icon pink">🎯</div>
+                <div class="section-title">🎯 Study Mode</div>
+                <div class="mode-badge default" id="mode-indicator">
+                    <span class="dot"></span> Default Mode
                 </div>
-                <div class="webcam-controls">
-                    <button class="webcam-btn" id="webcam-start-btn">Start Webcam</button>
-                    <button class="webcam-btn stop" id="webcam-stop-btn">Stop Webcam</button>
-                </div>
-                <div id="focus-alert" class="focus-alert" style="display: none;">
-                    <div class="alert-icon">⚠️</div>
-                    <div class="alert-text">Focus Alert: Look at the screen!</div>
+                <button class="btn btn-primary" id="mode-btn">Switch to Focus Mode</button>
+                <div class="mode-desc">
+                    <strong>Default:</strong> Earn XP & coins just by studying! 🎉<br><br>
+                    <strong>Focus:</strong> Face-detection keeps you honest 👀
                 </div>
             </div>
-        </div>
-        
-        <!-- Shop Page -->
-        <div class="page" id="shop-page">
-            <div class="card shop-card">
-                <h3>🛍️ Shop</h3>
-                <div id="shop-items">
-                    <!-- Items will be populated by JavaScript -->
+
+            <!-- STUDY TIME -->
+            <div class="card">
+                <div class="card-icon amber">⏱️</div>
+                <div class="section-title">⏱️ Study Time</div>
+                <div class="stat-item">
+                    <span>Total time</span>
+                    <span class="stat-value" id="total-time">0h 0m</span>
+                </div>
+                <div class="stat-item">
+                    <span>This session</span>
+                    <span class="stat-value" id="session-time">0m 0s</span>
+                </div>
+                <div class="pixel-divider" style="margin-top:16px;"></div>
+                <div style="text-align:center; font-family:'Press Start 2P',monospace; font-size:0.42em; color:var(--wood-mid); margin-top:10px; letter-spacing:0.04em;">Keep it up, farmer! 🌱</div>
+            </div>
+
+            <!-- DESKTOP BUDDY -->
+            <div class="card">
+                <div class="card-icon teal">🖥️</div>
+                <div class="section-title">🖥️ Desktop Buddy</div>
+                <div class="overlay-pill on" id="overlay-indicator">✦ Overlay Active</div>
+                <button class="btn btn-primary" id="overlay-btn">Disable Overlay</button>
+                <div class="mode-desc">
+                    Toggle the floating pet that pops up when you copy text. So cute! 🐾
                 </div>
             </div>
+
         </div>
-        
-        <!-- Learning Page -->
-        <div class="page" id="learning-page">
-            <div class="card learning-card">
-                <h3>📚 Learning & Mastery</h3>
-                <p style="color: #666; margin-bottom: 20px;">Topics you've struggled with and requested help for:</p>
-                <div id="learning-topics">
-                    <div style="text-align: center; color: #999; padding: 40px;">
-                        No learning data yet. Copy text and use Simplify or Translate to start tracking!
-                    </div>
+    </div>
+
+    <!-- ══ WEBCAM ══ -->
+    <div class="page" id="webcam-page">
+        <div class="card">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="card-icon purple" style="margin-bottom:0;">📹</div>
+                    <div class="section-title" style="margin-bottom:0; box-shadow:none;">📹 Focus Cam</div>
                 </div>
-                <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px;">
-                    <h4 style="color: #667eea; margin-bottom: 10px;">💡 Study Tips</h4>
-                    <ul style="color: #666; font-size: 0.9em; line-height: 1.5;">
-                        <li>Focus on topics that appear frequently in your learning list</li>
-                        <li>Topics with higher counts indicate areas needing more practice</li>
-                        <li>Use the Simplify option for complex concepts</li>
-                        <li>Try Translate for language learning</li>
-                    </ul>
+                <div id="live-badge" style="display:none;" class="live-dot">LIVE</div>
+            </div>
+            <p style="font-family:'Press Start 2P',monospace; font-size:0.44em; color:var(--wood-mid); margin-bottom:4px; letter-spacing:0.04em; line-height:1.8;">Your webcam watches so your pet can cheer you on 🐾</p>
+
+            <div class="focus-stats-row">
+                <div class="focus-stat-chip">
+                    <span class="fsc-val" id="focus-pct">—</span>
+                    <span class="fsc-lbl">Focus Rate</span>
                 </div>
+                <div class="focus-stat-chip">
+                    <span class="fsc-val" id="focus-streak">0</span>
+                    <span class="fsc-lbl">🔥 Streak</span>
+                </div>
+                <div class="focus-stat-chip">
+                    <span class="fsc-val" id="focus-alerts">0</span>
+                    <span class="fsc-lbl">⚠️ Alerts</span>
+                </div>
+            </div>
+
+            <div id="webcam-container">
+                <div class="webcam-placeholder" id="webcam-placeholder">
+                    <div class="webcam-icon-wrap">📷</div>
+                    <span class="webcam-inactive-label">Webcam Inactive</span>
+                    <span class="webcam-inactive-sub">Press Start to begin</span>
+                </div>
+                <canvas id="webcam-canvas"></canvas>
+            </div>
+
+            <div id="webcam-live-bar" class="webcam-live-bar" style="display:none;">
+                <span class="live-dot">Recording</span>
+                <span class="streak-chip" id="streak-label">Streak: 0s 🔥</span>
+            </div>
+
+            <div class="webcam-controls">
+                <button class="btn btn-primary" id="webcam-start-btn">▶ Start Webcam</button>
+                <button class="btn btn-danger" id="webcam-stop-btn">⏹ Stop</button>
+            </div>
+
+            <div id="focus-alert" class="focus-alert" style="display:none;">
+                ⚠️ Hey! Eyes on screen!
             </div>
         </div>
     </div>
-    
-    <div class="notification" id="notification"></div>
-    
-    <script>
-        const shopItems = [
-            { name: 'Top Hat', price: 150 },
-            { name: 'Monocle', price: 200 },
-            { name: 'Crown', price: 500 },
-            { name: 'Sunglasses', price: 100 }
-        ];
-        
-        let currentMode = 'default';
-        let stats = {};
-        let webcamStream = null;
-        let focusAlertTimeout = null;
-        let overlayEnabled = true;
-        
-        // Page navigation
-        function showPage(pageName) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            
-            // Show selected page
-            document.getElementById(pageName + '-page').classList.add('active');
-            event.target.classList.add('active');
-            
-            // Update page-specific content
-            if (pageName === 'shop') {
-                updateShop();
-            } else if (pageName === 'learning') {
-                updateLearningTopics();
-            }
-        }
-        
-        // Load initial stats
-        async function loadStats() {
+
+    <!-- ══ SHOP ══ -->
+    <div class="page" id="shop-page">
+        <div class="card">
+            <div class="card-icon purple">🛍️</div>
+            <div class="section-title">🛍️ Item Shop</div>
+            <div id="shop-items"></div>
+        </div>
+    </div>
+
+    <!-- ══ LEARNING ══ -->
+    <div class="page" id="learning-page">
+        <div class="card">
+            <div class="card-icon purple">📚</div>
+            <div class="section-title">📚 Learning Tracker</div>
+            <p style="font-family:'Press Start 2P',monospace; font-size:0.44em; color:var(--wood-mid); margin-bottom:14px; letter-spacing:0.04em; line-height:1.8;">Topics you've asked for help with — keep it up! 🌟</p>
+            <div id="learning-topics">
+                <div class="empty-state">
+                    <div class="empty-icon">🌱</div>
+                    No data yet!<br>Copy some text and use<br>Simplify or Translate<br>to get started.
+                </div>
+            </div>
+            <div class="tips-box">
+                <h4>🌾 Study Tips</h4>
+                <ul>
+                    <li>Topics that show up a lot need the most love</li>
+                    <li>Use Simplify for tricky concepts</li>
+                    <li>Use Translate for language practice</li>
+                    <li>Consistency beats intensity every time!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="notification" id="notification">🎉 <span id="notif-text"></span></div>
+
+<script>
+    const shopItems = [
+        { name: 'Top Hat',    price: 150, emoji: '🎩' },
+        { name: 'Monocle',    price: 200, emoji: '🧐' },
+        { name: 'Crown',      price: 500, emoji: '👑' },
+        { name: 'Sunglasses', price: 100, emoji: '😎' }
+    ];
+
+    let currentMode = 'default';
+    let stats = {};
+    let webcamStream = null;
+    let focusAlertTimeout = null;
+    let overlayEnabled = true;
+    let focusStreak = 0, focusAlertCount = 0, focusFrames = 0, focusedFrames = 0;
+    let streakInterval = null;
+
+    function triggerPop(id) {
+        const el = document.getElementById(id);
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+        el.addEventListener('animationend', () => el.classList.remove('pop'), { once: true });
+    }
+
+    function showPage(pageName, e) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(pageName + '-page').classList.add('active');
+        if (e && e.target) e.target.classList.add('active');
+        if (pageName === 'shop') updateShop();
+        else if (pageName === 'learning') updateLearningTopics();
+    }
+
+    async function loadStats() {
+        try {
             const response = await fetch('/api/stats');
             stats = await response.json();
             updateUI();
-        }
-        
-        function updateUI() {
-            document.getElementById('level').textContent = stats.level;
-            document.getElementById('currency').textContent = Math.floor(stats.currency);
-            
-            const maxXP = stats.level * 100;
-            const xpPercent = (stats.xp / maxXP) * 100;
-            document.getElementById('xp-fill').style.width = xpPercent + '%';
-            document.getElementById('xp-text').textContent = `${Math.floor(stats.xp)}/${Math.floor(maxXP)}`;
-            
-            currentMode = stats.mode;
-            const indicator = document.getElementById('mode-indicator');
-            const btn = document.getElementById('mode-btn');
-            
-            if (currentMode === 'focus') {
-                indicator.textContent = '🎯 Focus Mode';
-                indicator.classList.add('focus');
-                btn.textContent = 'Switch to Default Mode';
-                btn.classList.add('focus');
-                document.getElementById('webcam-card').style.display = 'block';
-            } else {
-                indicator.textContent = '📚 Default Mode';
-                indicator.classList.remove('focus');
-                btn.textContent = 'Switch to Focus Mode';
-                btn.classList.remove('focus');
-                document.getElementById('webcam-card').style.display = 'none';
+        } catch (e) {
+            if (!stats.level) {
+                stats = { level: 3, currency: 220, xp: 47, mode: 'default', total_study_time: 5820, overlay_enabled: true, learning_topics: [] };
+                updateUI();
             }
-            
-            // Update shop
-            const shopContainer = document.getElementById('shop-items');
-            shopContainer.innerHTML = shopItems.map(item => `
-                <div class="shop-item">
-                    <span>${item.name} - $${item.price}</span>
-                    <button class="shop-btn" onclick="buyItem('${item.name}', ${item.price})" 
-                        ${stats.currency < item.price ? 'disabled' : ''}>
-                        Buy
-                    </button>
+        }
+    }
+
+    function updateUI() {
+        const prevLevel = document.getElementById('level').textContent;
+        const prevCoins = document.getElementById('currency').textContent;
+
+        document.getElementById('level').textContent = stats.level;
+        document.getElementById('currency').textContent = Math.floor(stats.currency);
+
+        if (String(stats.level) !== prevLevel) triggerPop('level');
+        if (String(Math.floor(stats.currency)) !== prevCoins) triggerPop('currency');
+
+        const maxXP = stats.level * 100;
+        const xpPercent = (stats.xp / maxXP) * 100;
+        document.getElementById('xp-fill').style.width = xpPercent + '%';
+        document.getElementById('xp-text').textContent = `${Math.floor(stats.xp)} / ${Math.floor(maxXP)}`;
+
+        currentMode = stats.mode;
+        const indicator = document.getElementById('mode-indicator');
+        const btn = document.getElementById('mode-btn');
+
+        if (currentMode === 'focus') {
+            indicator.className = 'mode-badge focus';
+            indicator.innerHTML = '<span class="dot"></span> Focus Mode';
+            btn.textContent = 'Switch to Default Mode';
+            btn.className = 'btn btn-danger';
+        } else {
+            indicator.className = 'mode-badge default';
+            indicator.innerHTML = '<span class="dot"></span> Default Mode';
+            btn.textContent = 'Switch to Focus Mode';
+            btn.className = 'btn btn-primary';
+        }
+
+        const hours = Math.floor(stats.total_study_time / 3600);
+        const minutes = Math.floor((stats.total_study_time % 3600) / 60);
+        document.getElementById('total-time').textContent = `${hours}h ${minutes}m`;
+
+        overlayEnabled = stats.overlay_enabled;
+        const oIndicator = document.getElementById('overlay-indicator');
+        const oBtn = document.getElementById('overlay-btn');
+
+        if (overlayEnabled) {
+            oIndicator.className = 'overlay-pill on';
+            oIndicator.textContent = '✦ Overlay Active';
+            oBtn.textContent = 'Disable Overlay';
+            oBtn.className = 'btn btn-primary';
+        } else {
+            oIndicator.className = 'overlay-pill off';
+            oIndicator.textContent = '✦ Overlay Off';
+            oBtn.textContent = 'Enable Overlay 🐾';
+            oBtn.className = 'btn btn-outline';
+        }
+
+        updateShop();
+    }
+
+    function updateShop() {
+        const container = document.getElementById('shop-items');
+        if (!container) return;
+        container.innerHTML = shopItems.map(item => `
+            <div class="shop-item">
+                <div class="item-emoji">${item.emoji}</div>
+                <div class="item-info">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">🪙 ${item.price} coins</div>
                 </div>
-            `).join('');
-            
-            // Update study time
-            const hours = Math.floor(stats.total_study_time / 3600);
-            const minutes = Math.floor((stats.total_study_time % 3600) / 60);
-            document.getElementById('total-time').textContent = `${hours}h ${minutes}m`;
-            
-            // Update overlay status
-            overlayEnabled = stats.overlay_enabled;
-            const overlayIndicator = document.getElementById('overlay-indicator');
-            const overlayBtn = document.getElementById('overlay-btn');
-            
-            if (overlayEnabled) {
-                overlayIndicator.textContent = '🐾 Overlay Active';
-                overlayIndicator.classList.remove('focus');
-                overlayBtn.textContent = 'Disable Overlay';
-                overlayBtn.classList.remove('focus');
-            } else {
-                overlayIndicator.textContent = '🚫 Overlay Disabled';
-                overlayIndicator.classList.add('focus');
-                overlayBtn.textContent = 'Enable Overlay';
-                overlayBtn.classList.add('focus');
-            }
-            
-            // Update webcam page visibility based on mode
-            if (currentMode === 'focus') {
-                document.querySelector('.nav-tab[onclick*="webcam"]').style.display = 'inline-block';
-            } else {
-                document.querySelector('.nav-tab[onclick*="webcam"]').style.display = 'none';
-                // If on webcam page and mode changed to default, switch to overview
-                if (document.getElementById('webcam-page').classList.contains('active')) {
-                    showPage('overview');
-                }
-            }
+                <button class="shop-btn" onclick="buyItem('${item.name}', ${item.price})"
+                    ${(stats.currency || 0) < item.price ? 'disabled' : ''}>
+                    Buy
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function updateLearningTopics() {
+        const topics = stats.learning_topics || [];
+        const container = document.getElementById('learning-topics');
+        if (topics.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div>No data yet!<br>Copy some text and use<br>Simplify or Translate<br>to get started.</div>`;
+            return;
         }
-        
-        function updateShop() {
-            const shopContainer = document.getElementById('shop-items');
-            shopContainer.innerHTML = shopItems.map(item => `
-                <div class="shop-item">
-                    <span>${item.name} - $${item.price}</span>
-                    <button class="shop-btn" onclick="buyItem('${item.name}', ${item.price})" 
-                        ${stats.currency < item.price ? 'disabled' : ''}>
-                        Buy
-                    </button>
+        container.innerHTML = topics.map(([topic, count], index) => `
+            <div class="learning-item ${index < 3 ? 'top' : ''}">
+                <div>
+                    <div class="topic-name">${topic}</div>
+                    <div class="topic-count">Struggled ${count} time${count > 1 ? 's' : ''}</div>
                 </div>
-            `).join('');
-        }
-        
-        function updateLearningTopics() {
-            const topics = stats.learning_topics || [];
-            const container = document.getElementById('learning-topics');
-            
-            if (topics.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #999; padding: 40px;">
-                        No learning data yet. Copy text and use Simplify or Translate to start tracking!
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = topics.map(([topic, count], index) => `
-                <div class="learning-item" style="
-                    background: ${index < 3 ? 'linear-gradient(135deg, #667eea, #764ba2)' : '#f5f5f5'};
-                    color: ${index < 3 ? 'white' : '#333'};
-                    padding: 15px;
-                    border-radius: 10px;
-                    margin: 10px 0;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                ">
-                    <div>
-                        <div style="font-weight: bold; font-size: 1.1em;">${topic}</div>
-                        <div style="font-size: 0.9em; opacity: 0.8;">Struggled ${count} time${count > 1 ? 's' : ''}</div>
-                    </div>
-                    <div style="
-                        background: ${index < 3 ? 'rgba(255,255,255,0.2)' : '#667eea'};
-                        color: ${index < 3 ? 'white' : 'white'};
-                        padding: 5px 12px;
-                        border-radius: 15px;
-                        font-size: 0.8em;
-                        font-weight: bold;
-                    ">
-                        ${index + 1}
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        async function toggleMode() {
+                <div class="rank-badge ${index < 3 ? '' : 'regular'}">#${index + 1}</div>
+            </div>
+        `).join('');
+    }
+
+    async function toggleMode() {
+        try {
             const response = await fetch('/api/mode', { method: 'POST' });
             const data = await response.json();
             showNotification(data.message);
             loadStats();
+        } catch (e) {
+            stats.mode = stats.mode === 'focus' ? 'default' : 'focus';
+            updateUI();
+            showNotification('Mode switched!');
         }
-        
-        async function toggleOverlay() {
+    }
+
+    async function toggleOverlay() {
+        try {
             const response = await fetch('/api/overlay/toggle', { method: 'POST' });
             const data = await response.json();
             showNotification(data.message);
             loadStats();
+        } catch (e) {
+            stats.overlay_enabled = !stats.overlay_enabled;
+            updateUI();
+            showNotification('Overlay toggled!');
         }
-        
-        async function startWebcam() {
+    }
+
+    async function startWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            webcamStream = stream;
+            focusStreak = 0; focusAlertCount = 0; focusFrames = 0; focusedFrames = 0;
+            updateFocusStats();
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.style.width = '100%';
+            const canvas = document.getElementById('webcam-canvas');
+            const ctx = canvas.getContext('2d');
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.style.display = 'block';
+                document.getElementById('webcam-placeholder').style.display = 'none';
+                document.getElementById('webcam-live-bar').style.display = 'flex';
+                document.getElementById('live-badge').style.display = 'inline-flex';
+                streakInterval = setInterval(() => {
+                    focusStreak++;
+                    document.getElementById('streak-label').textContent = `Streak: ${focusStreak}s 🔥`;
+                    updateFocusStats();
+                }, 1000);
+                processWebcamFrames(video, canvas, ctx);
+            };
+            document.getElementById('webcam-container').appendChild(video);
+            await fetch('/api/webcam/start', { method: 'POST' }).catch(() => {});
+            showNotification('Webcam started! 👀');
+        } catch (error) {
+            showNotification('Could not access webcam: ' + error.message);
+        }
+    }
+
+    async function processWebcamFrames(video, canvas, ctx) {
+        if (!webcamStream) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        focusFrames++;
+        canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append('frame', blob);
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                webcamStream = stream;
-                
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.autoplay = true;
-                video.style.width = '100%';
-                video.style.borderRadius = '10px';
-                
-                const canvas = document.getElementById('webcam-canvas');
-                const ctx = canvas.getContext('2d');
-                
-                video.onloadedmetadata = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.style.display = 'block';
-                    document.getElementById('webcam-placeholder').style.display = 'none';
-                    
-                    // Start processing frames
-                    processWebcamFrames(video, canvas, ctx);
-                };
-                
-                document.getElementById('webcam-container').appendChild(video);
-                await fetch('/api/webcam/start', { method: 'POST' });
-                showNotification('Webcam started for focus detection');
-                
-            } catch (error) {
-                showNotification('Error accessing webcam: ' + error.message);
-            }
+                const response = await fetch('/api/webcam/detect', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.face_detected) { focusedFrames++; hideFocusAlert(); }
+                else showFocusAlert();
+                updateFocusStats();
+            } catch (e) {}
+        });
+        requestAnimationFrame(() => processWebcamFrames(video, canvas, ctx));
+    }
+
+    function updateFocusStats() {
+        const pct = focusFrames > 0 ? Math.round((focusedFrames / focusFrames) * 100) : null;
+        document.getElementById('focus-pct').textContent = pct !== null ? pct + '%' : '—';
+        document.getElementById('focus-streak').textContent = focusStreak;
+        document.getElementById('focus-alerts').textContent = focusAlertCount;
+    }
+
+    function showFocusAlert() {
+        const alertEl = document.getElementById('focus-alert');
+        if (alertEl.style.display === 'none' || alertEl.style.display === '') {
+            focusAlertCount++;
+            focusStreak = 0;
+            document.getElementById('streak-label').textContent = `Streak: 0s 🔥`;
         }
-        
-        async function processWebcamFrames(video, canvas, ctx) {
-            if (!webcamStream) return;
-            
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Send frame to backend for face detection
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('frame', blob);
-                
-                try {
-                    const response = await fetch('/api/webcam/detect', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    
-                    if (!data.face_detected) {
-                        showFocusAlert();
-                    } else {
-                        hideFocusAlert();
-                    }
-                } catch (error) {
-                    console.error('Face detection error:', error);
-                }
-            });
-            
-            requestAnimationFrame(() => processWebcamFrames(video, canvas, ctx));
-        }
-        
-        function showFocusAlert() {
-            const alert = document.getElementById('focus-alert');
-            alert.style.display = 'block';
-            
-            // Clear existing timeout
-            if (focusAlertTimeout) clearTimeout(focusAlertTimeout);
-            
-            // Auto-hide after 3 seconds
-            focusAlertTimeout = setTimeout(() => {
-                hideFocusAlert();
-            }, 3000);
-        }
-        
-        function hideFocusAlert() {
-            document.getElementById('focus-alert').style.display = 'none';
-            if (focusAlertTimeout) {
-                clearTimeout(focusAlertTimeout);
-                focusAlertTimeout = null;
-            }
-        }
-        
-        async function stopWebcam() {
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(track => track.stop());
-                webcamStream = null;
-            }
-            
-            document.getElementById('webcam-canvas').style.display = 'none';
-            document.getElementById('webcam-placeholder').style.display = 'block';
-            
-            // Remove video element
-            const video = document.querySelector('#webcam-container video');
-            if (video) video.remove();
-            
-            hideFocusAlert();
-            await fetch('/api/webcam/stop', { method: 'POST' });
-            showNotification('Webcam stopped');
-        }
-        
-        function showNotification(message) {
-            const notif = document.getElementById('notification');
-            notif.textContent = message;
-            notif.classList.add('show');
-            setTimeout(() => notif.classList.remove('show'), 3000);
-        }
-        
-        // Event listeners
-        document.getElementById('mode-btn').addEventListener('click', toggleMode);
-        document.getElementById('overlay-btn').addEventListener('click', toggleOverlay);
-        document.getElementById('webcam-start-btn').addEventListener('click', startWebcam);
-        document.getElementById('webcam-stop-btn').addEventListener('click', stopWebcam);
-        
-        // Auto-refresh stats every second
-        setInterval(loadStats, 1000);
-        
-        // Initial load
-        loadStats();
-    </script>
+        alertEl.style.display = 'flex';
+        if (focusAlertTimeout) clearTimeout(focusAlertTimeout);
+        focusAlertTimeout = setTimeout(hideFocusAlert, 3000);
+    }
+
+    function hideFocusAlert() {
+        document.getElementById('focus-alert').style.display = 'none';
+        if (focusAlertTimeout) { clearTimeout(focusAlertTimeout); focusAlertTimeout = null; }
+    }
+
+    async function stopWebcam() {
+        if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
+        if (streakInterval) { clearInterval(streakInterval); streakInterval = null; }
+        document.getElementById('webcam-canvas').style.display = 'none';
+        document.getElementById('webcam-placeholder').style.display = 'flex';
+        document.getElementById('webcam-live-bar').style.display = 'none';
+        document.getElementById('live-badge').style.display = 'none';
+        const video = document.querySelector('#webcam-container video');
+        if (video) video.remove();
+        hideFocusAlert();
+        await fetch('/api/webcam/stop', { method: 'POST' }).catch(() => {});
+        showNotification('Webcam stopped 📷');
+    }
+
+    function buyItem(name, price) {
+        if ((stats.currency || 0) < price) return;
+        stats.currency -= price;
+        fetch('/api/shop/buy', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({item: name}) }).catch(() => {});
+        showNotification(`Bought ${name}! 🎉`);
+        updateUI();
+    }
+
+    function showNotification(message) {
+        const notif = document.getElementById('notification');
+        document.getElementById('notif-text').textContent = message;
+        notif.classList.remove('hiding');
+        notif.classList.add('show');
+        clearTimeout(notif._hideTimer);
+        notif._hideTimer = setTimeout(() => {
+            notif.classList.add('hiding');
+            setTimeout(() => { notif.classList.remove('show', 'hiding'); }, 350);
+        }, 2800);
+    }
+
+    document.getElementById('mode-btn').addEventListener('click', toggleMode);
+    document.getElementById('overlay-btn').addEventListener('click', toggleOverlay);
+    document.getElementById('webcam-start-btn').addEventListener('click', startWebcam);
+    document.getElementById('webcam-stop-btn').addEventListener('click', stopWebcam);
+
+    setInterval(loadStats, 1000);
+    loadStats();
+</script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import json
 import time
 import pyautogui
 import threading
+import random
 from pet_ui import PetUI
 from pet_brain import PetBrain
 from pet_body import Pet
@@ -54,6 +55,9 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if pet.collide(event.pos): # Pet is clicked on
                     pet.held_down = True
+                    if event.button == 1:
+                        r_greeting = random.choice(["Hello!", "Hey!", "Stop..."])
+                        ui.show_speech_bubble(r_greeting, 3)
                     # Additional left click events
                     if event.button == 3:
                         ui.toggle_menu()

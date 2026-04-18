@@ -15,8 +15,8 @@ class PetUI:
         
         # Animation tracking
         self.frame = 0
-        self.font_small = pygame.font.SysFont("Arial", 9)
-        self.font_medium = pygame.font.SysFont("Arial", 11)
+        self.font_small = pygame.font.SysFont("Arial", 14)
+        self.font_medium = pygame.font.SysFont("Arial", 18)
         
         # Speech bubble state
         self.speech_bubble_text = ""
