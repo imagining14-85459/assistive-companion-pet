@@ -83,7 +83,6 @@ class PetUI:
 
     def show_speech_bubble(self, text, duration=5):
         """Display AI response as a speech bubble"""
-        print(f"🗯️ Showing speech bubble: '{text[:50]}...' for {duration}s")
         self.speech_bubble_text = text
         self.speech_bubble_time = time.time()
         self.speech_bubble_duration = duration
@@ -278,7 +277,7 @@ class PetUI:
             with open("pet_data.json", "r") as f:
                 data = json.load(f)
             mode = data.get("mode", "default")
-        except:
+        except (FileNotFoundError, json.JSONDecodeError):
             mode = "default"
         
         # Pet color based on mode

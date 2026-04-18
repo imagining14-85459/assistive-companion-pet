@@ -5,6 +5,8 @@ import pyautogui
 import threading
 import random
 import socket
+import pyperclip
+
 from pet_ui import PetUI
 from pet_brain import PetBrain
 from pet_body import Pet
@@ -72,7 +74,7 @@ def main():
     # Focus monitoring
     focus_check_interval = 2.0  # Check focus every 2 seconds
     last_focus_check = 0
-    was_focusing = True  # Assume initially focused
+    was_focusing = False  # Assume not focused
     focus_alert_cooldown = 0  # Prevent spam alerts
 
     running = True
@@ -87,8 +89,8 @@ def main():
         except json.decoder.JSONDecodeError:
             # failed to open, skip for the frame
             pass
-        pet.shown = data["overlay_enabled"]
-        pet.update_hat(data["equipped_hat"])
+        pet.shown = data.get("overlay_enabled", True)
+        pet.update_hat(data.get("equipped_hat", None))
         current_time = time.time()
         if prev_mouse_pos == pyautogui.position():
             idle += 1
@@ -98,13 +100,14 @@ def main():
         if idle > 30 * 10:
             pet.state = "follow"
             ui.pet_speaks(pet, "Give me attention!", 5)
+            idle = 0
 
         if pet.state == "follow":
             current_destination = pyautogui.position()
 
         # load mode
         mode = data.get("mode", "default")
-        is_focusing_now = None
+        is_focusing_now = False
         if mode == "focus":
             is_focusing_now = brain.is_focusing()
             # Alert when focus is lost (but not too frequently)
@@ -124,23 +127,22 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.MOUSEMOTION and pet.held_down:
+            if event.type == pygame.MOUSEMOTION and pet.held_down: # click and drag the pet
                 current_destination = pyautogui.position()
                 dx,dy = event.rel
                 pet.speed = (dx**2 + dy**2)**0.5
                 pet.take_step(current_destination[0], current_destination[1])
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN: # Clicking the pet
                 if pet.collide(event.pos): # Pet is clicked on
                     pet.held_down = True
-                    if event.button == 1:
+                    if event.button == 1: # Left click pet
                         r_greeting = random.choice(["Hello!", "Hey!", "Stop..."])
                         ui.pet_speaks(pet,r_greeting, 3)
-                    # Additional left click events
-                    if event.button == 3:
+                    if event.button == 3: # Right click pet
                         ui.toggle_menu()
 
-            if event.type == pygame.MOUSEBUTTONUP:
+            if event.type == pygame.MOUSEBUTTONUP:# Releasing button on pet
                 if pet.held_down: # lets the pet go
                     pet.held_down = False
                     pet.speed = 10
@@ -161,7 +163,6 @@ def main():
                             language_option = ui.select_translate_option()
                             if language_option:
                                 # Get clipboard content if we don't have it
-                                import pyperclip
                                 current_clipboard_text = pyperclip.paste()
                                 if not current_clipboard_text or not current_clipboard_text.strip():
                                     print("⚠ No text in clipboard")
@@ -204,11 +205,10 @@ def main():
                                     # Check if clipboard is required
                                     requires_clipboard = option.get('requires_clipboard', True)
                                     if requires_clipboard:
-                                        import pyperclip
                                         current_clipboard_text = pyperclip.paste()
                                         if not current_clipboard_text or not current_clipboard_text.strip():
                                             print("⚠ No text in clipboard")
-                                            ui.show_speech_bubble("Please copy some text first!", duration=3)
+                                            ui.pet_speaks(pet, "Please copy some text first!", duration=3)
                                             ui.toggle_menu(False)
                                             continue
 
