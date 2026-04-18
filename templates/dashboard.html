@@ -1176,6 +1176,8 @@
     }
 
     async function startWebcam() {
+        document.getElementById('webcam-start-btn').disabled = true;  
+        document.getElementById('webcam-stop-btn').disabled = false;  
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             webcamStream = stream;
@@ -1201,6 +1203,7 @@
                 }, 1000);
                 processWebcamFrames(video, canvas, ctx);
             };
+            video.style.display = 'none'; // Hides duplicate video element
             document.getElementById('webcam-container').appendChild(video);
             await fetch('/api/webcam/start', { method: 'POST' }).catch(() => {});
             showNotification('Webcam started! 👀');
@@ -1252,6 +1255,8 @@
     }
 
     async function stopWebcam() {
+        document.getElementById('webcam-start-btn').disabled = false;  
+        document.getElementById('webcam-stop-btn').disabled = true; 
         if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
         if (streakInterval) { clearInterval(streakInterval); streakInterval = null; }
         document.getElementById('webcam-canvas').style.display = 'none';
