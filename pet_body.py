@@ -38,7 +38,8 @@ class Pet(pygame.sprite.Sprite):
         self.rect.center = (x,y)
 
     def update_hat(self, hat:str):
-        self.hat = Hat(self.x, self.y, hat)
+        if not hat: self.hat = None
+        else: self.hat = Hat(self.x, self.y, hat)
 
     def collide(self, pos: tuple[int, int]) -> bool:
         return self.rect.collidepoint(pos[0], pos[1])
