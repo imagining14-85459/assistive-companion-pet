@@ -982,25 +982,59 @@
     async function toggleMode(){try{const r=await fetch('/api/mode',{method:'POST'});const d=await r.json();showNotification(d.message);loadStats();}catch(e){stats.mode=stats.mode==='focus'?'default':'focus';updateUI();showNotification('Mode switched!');}}
     async function toggleOverlay(){try{const r=await fetch('/api/overlay/toggle',{method:'POST'});const d=await r.json();showNotification(d.message);loadStats();}catch(e){stats.overlay_enabled=!stats.overlay_enabled;updateUI();showNotification('Overlay toggled!');}}
 
-    async function startWebcam(){
-        try{
-            const stream=await navigator.mediaDevices.getUserMedia({video:true});
-            webcamStream=stream;focusStreak=0;focusAlertCount=0;focusFrames=0;focusedFrames=0;updateFocusStats();
-            const vid=document.createElement('video');vid.srcObject=stream;vid.autoplay=true;vid.style.width='100%';
-            const cv=document.getElementById('webcam-canvas');const ctx=cv.getContext('2d');
-            vid.onloadedmetadata=()=>{
-                cv.width=vid.videoWidth;cv.height=vid.videoHeight;cv.style.display='block';
-                document.getElementById('webcam-placeholder').style.display='none';
-                document.getElementById('webcam-live-bar').style.display='flex';
-                document.getElementById('live-badge').style.display='inline-flex';
-                streakInterval=setInterval(()=>{focusStreak++;document.getElementById('streak-label').textContent=`Streak: ${focusStreak}s 🔥`;updateFocusStats();},1000);
-                processFrames(vid,cv,ctx);
-            };
-            document.getElementById('webcam-container').appendChild(vid);
-            await fetch('/api/webcam/start',{method:'POST'}).catch(()=>{});
-            showNotification('Webcam started! 👀');
-        }catch(e){showNotification('Could not access webcam: '+e.message);}
+    async function startWebcam() {
+    if (webcamStream) return; // prevent double-start
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        webcamStream = stream;
+        focusStreak = 0;
+        focusAlertCount = 0;
+        focusFrames = 0;
+        focusedFrames = 0;
+        updateFocusStats();
+
+        // Hidden video element — just a frame source for the canvas
+        const vid = document.createElement('video');
+        vid.srcObject = stream;
+        vid.autoplay = true;
+        vid.playsInline = true;
+        vid.style.display = 'none';
+        document.getElementById('webcam-container').appendChild(vid);
+
+        const cv = document.getElementById('webcam-canvas');
+        const ctx = cv.getContext('2d');
+
+        vid.onloadedmetadata = () => {
+            cv.width = vid.videoWidth;
+            cv.height = vid.videoHeight;
+            cv.style.display = 'block';
+
+            document.getElementById('webcam-placeholder').style.display = 'none';
+            document.getElementById('webcam-live-bar').style.display = 'flex';
+            document.getElementById('live-badge').style.display = 'inline-flex';
+
+            // Streak timer
+            streakInterval = setInterval(() => {
+                focusStreak++;
+                document.getElementById('streak-label').textContent = `Streak: ${focusStreak}s 🔥`;
+                updateFocusStats();
+            }, 1000);
+
+            processFrames(vid, cv, ctx);
+        };
+
+        showNotification('Webcam started! 👀');
+
+    } catch (e) {
+        const msg = e.name === 'NotAllowedError'
+            ? 'Camera permission denied 🚫'
+            : e.name === 'NotFoundError'
+            ? 'No camera found 📷'
+            : 'Could not access webcam: ' + e.message;
+        showNotification(msg);
     }
+}
 
     async function processFrames(vid,cv,ctx){
         if(!webcamStream)return;
