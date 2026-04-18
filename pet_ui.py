@@ -15,8 +15,8 @@ class PetUI:
         
         # Animation tracking
         self.frame = 0
-        self.font_small = pygame.font.SysFont("Arial", 9)
-        self.font_medium = pygame.font.SysFont("Arial", 11)
+        self.font_small = pygame.font.SysFont("Arial", 14)
+        self.font_medium = pygame.font.SysFont("Arial", 18)
         
         # Speech bubble state
         self.speech_bubble_text = ""
@@ -90,7 +90,7 @@ class PetUI:
             return self.menu_options[self.selected_option]
         return None
 
-    def draw_speech_bubble(self):
+    def draw_speech_bubble(self, x, y):
         """Draw AI response speech bubble"""
         if not self.is_speech_bubble_active():
             return
@@ -117,30 +117,27 @@ class PetUI:
         line_height = 18
         bubble_height = len(lines) * line_height + 15
         bubble_width = max_width + 20
-        bubble_x = 125 - bubble_width // 2
-        bubble_y = 40
+        bubble_x = x
+        bubble_y = y - bubble_height*2
         
         # Bubble rectangle
         pygame.draw.rect(self.screen, (255, 255, 255), (bubble_x, bubble_y, bubble_width, bubble_height), border_radius=10)
         pygame.draw.rect(self.screen, (200, 200, 200), (bubble_x, bubble_y, bubble_width, bubble_height), 2, border_radius=10)
-        
-        # Pointer to pet
-        pygame.draw.polygon(self.screen, (255, 255, 255), [(125, bubble_y + bubble_height), (115, bubble_y + bubble_height + 10), (135, bubble_y + bubble_height + 10)])
         
         # Draw text
         for i, line in enumerate(lines):
             text_surf = self.font_small.render(line, True, (0, 0, 0))
             self.screen.blit(text_surf, (bubble_x + 10, bubble_y + 7 + i * line_height))
 
-    def draw_menu(self):
+    def draw_menu(self, x, y):
         """Draw intent-based menu"""
         if not self.show_menu:
             return
         
         menu_width = 200
         menu_height = len(self.menu_options) * 35 + 20
-        menu_x = 125 - menu_width // 2
-        menu_y = 150
+        menu_x = x - menu_width
+        menu_y = y - menu_height
         
         # Menu background
         pygame.draw.rect(self.screen, (40, 40, 40), (menu_x, menu_y, menu_width, menu_height), border_radius=10)
@@ -165,7 +162,7 @@ class PetUI:
             text_surf = self.font_small.render(text, True, color)
             self.screen.blit(text_surf, (menu_x + 15, option_y + 8))
 
-    def draw(self, pet: Pet, hat=None):
+    def draw(self, pet: Pet):
         """Main draw function"""
         self.screen.fill(self.trans_color)
         
@@ -184,19 +181,15 @@ class PetUI:
             color = (100, 200, 255)  # Blue for Default mode
         
         # Animation: bouncing effect
-        bounce = math.sin(self.frame * 0.1) * 5
-        body_y = pet.y + bounce
-        
+        bounce = math.sin(self.frame * 0.1)
+        pet.y = pet.y + bounce
+        pet.update_rect()
+
         # Draw pet
         sprites = pygame.sprite.Group()
         sprites.add(pet)
+        if pet.hat: sprites.add(pet.hat)
         sprites.draw(self.screen)
-        
-        # Draw hat if equipped #TODO
-        # if hat == "Top Hat":
-        #     hat_y = 40 + bounce
-        #     pygame.draw.rect(self.screen, (40, 40, 40), (95, int(hat_y), 60, 25))
-        #     pygame.draw.rect(self.screen, (10, 10, 10), (85, int(hat_y + 25), 80, 5))
         
         # Draw mode indicator emoji
         mode_text = "🎯" if mode == "focus" else "📚"
@@ -204,10 +197,10 @@ class PetUI:
         self.screen.blit(mode_label, (10, 10))
         
         # Draw speech bubble if active
-        self.draw_speech_bubble()
+        self.draw_speech_bubble(pet.x, pet.y)
         
         # Draw menu if active
-        self.draw_menu()
+        self.draw_menu(pet.x, pet.y)
         
         # Draw instructions if menu is showing
         if self.show_menu:

@@ -3,26 +3,45 @@ import json
 import time
 import pyautogui
 import threading
+import random
 from pet_ui import PetUI
 from pet_brain import PetBrain
 from pet_body import Pet
 def main():
     """Lightweight desktop overlay with clipboard monitoring"""
+    # Load pet data for stats/cosmetics
+    try:
+        with open("pet_data.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError as e:
+        data = {}
+
     ui = PetUI(size = pyautogui.size())
     brain = PetBrain(mode="default")  # Default mode for overlay
     clock = pygame.time.Clock()
-    pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10)
+
+    pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10, data["equipped_hat"])
     # Clipboard monitoring
     last_clipboard_check = 0
     clipboard_check_interval = 0.5  # Check every 0.5 seconds
     
     # Study Session Tracker
     session_start = time.time()
-    
+
     running = True
+    current_destination = pyautogui.position()
+    idle = 0
+    prev_mouse_pos = pyautogui.position()
     while running:
         current_time = time.time()
-        
+        if prev_mouse_pos == pyautogui.position():
+            idle += 1
+        else:
+            prev_mouse_pos = pyautogui.position()
+            idle = 0
+        if idle > 30 * 10:
+            pet.state = "follow"
+            ui.show_speech_bubble("Give me attention!", 5)
         # Check clipboard periodically
         if current_time - last_clipboard_check >= clipboard_check_interval:
             last_clipboard_check = current_time
@@ -32,11 +51,36 @@ def main():
                 # Text copied! Show menu
                 ui.toggle_menu(True)
                 print(f"📋 Copied text: {clipboard_text[:50]}...")
-        current_destination = pyautogui.position() # TODO: right now it just follows, change to move cmd
+
+        if pet.state == "follow":
+            current_destination = pyautogui.position()
         # Handle pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            if event.type == pygame.MOUSEMOTION and pet.held_down:
+                current_destination = pyautogui.position()
+                dx,dy = event.rel
+                pet.speed = (dx**2 + dy**2)**0.5
+                pet.take_step(current_destination[0], current_destination[1])
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pet.collide(event.pos): # Pet is clicked on
+                    pet.held_down = True
+                    if event.button == 1:
+                        r_greeting = random.choice(["Hello!", "Hey!", "Stop..."])
+                        ui.show_speech_bubble(r_greeting, 3)
+                    # Additional left click events
+                    if event.button == 3:
+                        ui.toggle_menu()
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if pet.held_down: # lets the pet go
+                    pet.held_down = False
+                    pet.speed = 10
+                    current_destination = pyautogui.position()
+                    pet.state = "stay"
 
             if event.type == pygame.KEYDOWN:
                 # Menu navigation
@@ -83,23 +127,18 @@ def main():
                     pass
 
         # Movement logic
-        if abs(current_destination[0] - pet.x) > pet.size*1.5 or abs(current_destination[1] - pet.y) > pet.size*1.5:
+        if abs(current_destination[0] - pet.x) > pet.size or abs(current_destination[1] - pet.y) > pet.size:
             pet.take_step(current_destination[0], current_destination[1])
-
-        # Load pet data for stats/cosmetics
-        try:
-            with open("pet_data.json", "r") as f:
-                data = json.load(f)
-        except:
-            data = {}
         
         # Draw pet overlay
-        ui.draw(pet, data.get("equipped_hat"))
-        
+        ui.draw(pet)
+
         clock.tick(30)  # 30 FPS
     
     brain.stop()
     pygame.quit()
+    with open("pet_data.json", "w") as f:
+        json.dump(data, f, indent=4)
 
 if __name__ == "__main__":
     main()

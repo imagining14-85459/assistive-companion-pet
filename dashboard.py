@@ -11,6 +11,7 @@ class Dashboard:
         
     def run(self):
         running = True
+        msg = ""
         while running:
             with open("pet_data.json", "r") as f: data = json.load(f)
             self.screen.fill((30, 33, 40))
@@ -22,6 +23,11 @@ class Dashboard:
             # Shop Button
             hat_btn = pygame.draw.rect(self.screen, (70, 80, 200), (20, 100, 360, 50), border_radius=10)
             self.screen.blit(self.font.render("Buy Top Hat - $150", True, (255,255,255)), (40, 115))
+
+            # Display currency
+            coins_txt = self.font.render(f"Coins: ${int(data['currency'])}", True, (255, 215, 0))
+            coins_rect = coins_txt.get_rect(topright=(380, 20)) 
+            self.screen.blit(coins_txt, coins_rect)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: running = False
