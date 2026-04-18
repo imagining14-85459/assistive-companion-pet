@@ -2,6 +2,7 @@
 
 import pygame
 import random
+import json
 
 SPRITE_PATH = "assets/pet/cat_sprites.png"
 HATS = {"Top Hat":"assets/hats/tophat_cat_sprites.png", "Monocle":"assets/hats/monocle_cat_sprites.png",
@@ -13,12 +14,11 @@ class Pet(pygame.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
-        self.state = "stay" #stay, wonder, follow, attack, carried
+        self.state = "stay"
         self.shown = True
         self.size = 280
-
-        self.speed = speed # pixels / frame
-        self.held_down = False # bool on if the mouse is holding the pet
+        self.speed = speed
+        self.held_down = False
         self.frame = 0
         self.animation_id = 3
 
@@ -29,19 +29,39 @@ class Pet(pygame.sprite.Sprite):
         self.sprite_sheet = pygame.image.load(self.curr_path).convert_alpha()
         self.image = self._get_image()
         self.rect = self.image.get_rect()
-        self.rect.center = (x,y)
+        self.rect.center = (x, y)
 
-    def update_hat(self, hat:str):
+    def update_hat(self, hat: str):
         self.hat = hat
-        if not hat: self.curr_path = SPRITE_PATH
-        else: self.curr_path = HATS[hat]
+        if not hat:
+            self.curr_path = SPRITE_PATH
+        else:
+            self.curr_path = HATS[hat]
         self.sprite_sheet = pygame.image.load(self.curr_path).convert_alpha()
+
+    def sync_from_data(self):
+        """Read pet_data.json and update hat + inventory state live."""
+        try:
+            with open("pet_data.json", "r") as f:
+                data = json.load(f)
+
+            equipped = data.get("equipped_hat", None)
+
+            # Only reload sprite sheet if hat actually changed
+            if equipped != self.hat:
+                if equipped is None or equipped in HATS:
+                    self.update_hat(equipped)
+                else:
+                    print(f"⚠️ Unknown hat: {equipped}, ignoring.")
+
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"⚠️ Could not read pet_data.json: {e}")
 
     def collide(self, pos: tuple[int, int]) -> bool:
         return self.rect.collidepoint(pos[0], pos[1])
 
     def take_step(self, x, y):
-        direction = pygame.math.Vector2(x-self.x, y-self.y).normalize()
+        direction = pygame.math.Vector2(x - self.x, y - self.y).normalize()
         self.x += direction.x * self.speed
         self.y += direction.y * self.speed
         self.update_rect()
@@ -51,18 +71,18 @@ class Pet(pygame.sprite.Sprite):
         self.frame = 0
         match self.state:
             case "stay":
-                self.animation_id = random.choice([0,1,2,3,6])
+                self.animation_id = random.choice([0, 1, 2, 3, 6])
             case "follow" | "wander":
-                self.animation_id = random.choice([4,5])
+                self.animation_id = random.choice([4, 5])
             case "attack":
-                self.animation_id = random.choice([7,8])
+                self.animation_id = random.choice([7, 8])
             case "carried":
                 self.animation_id = 9
 
     def update_rect(self):
         self.rect.center = (self.x, self.y)
 
-    def animation_tick(self): #idle (0-2, 5: 4); walk (3,4: 8); harrass (6:6) harassed (7,8: 7,8)
+    def animation_tick(self):
         self.frame += 1
         match self.state:
             case "stay":
@@ -77,7 +97,7 @@ class Pet(pygame.sprite.Sprite):
 
     def _get_image(self):
         image = pygame.Surface((32, 32)).convert_alpha()
-        image.blit(self.sprite_sheet, (0, 0), ((self.frame * 32), (self.animation_id*32), 32, 32))
+        image.blit(self.sprite_sheet, (0, 0), ((self.frame * 32), (self.animation_id * 32), 32, 32))
         image = pygame.transform.scale(image, (self.size, self.size))
-        image.set_colorkey((0, 0, 0)) # Remove background color if needed
+        image.set_colorkey((0, 0, 0))
         return image

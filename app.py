@@ -44,14 +44,12 @@ latest_frame = None
 face_mesh = None
 
 def get_pet_data():
-    """Load pet data from JSON"""
     try:
         with open("pet_data.json", "r") as f:
-            return json.load(f)
+            data = json.load(f)
     except:
         data = {}
     
-    # Ensure overlay is enabled by default
     if 'overlay_enabled' not in data:
         data['overlay_enabled'] = True
         save_pet_data(data)
@@ -135,8 +133,10 @@ def toggle_mode():
 
 @app.route('/api/shop/buy', methods=['POST'])
 def buy_item():
-    """Buy item from shop"""
     item = request.json.get('item')
+    data = get_pet_data()
+    print(f"BUY REQUEST: item={item}, currency={data.get('currency')}, inventory={data.get('inventory')}")
+    
     prices = {
         'Top Hat': 150,
         'Monocle': 200,
@@ -144,22 +144,24 @@ def buy_item():
         'Sunglasses': 100
     }
     
-    data = get_pet_data()
-    inventory = data.get('inventory', [])
     price = prices.get(item)
+    print(f"Price found: {price}")
     
     if price is None:
+        print("FAIL: item not found")
         return jsonify({'success': False, 'message': 'Item not found.'}), 400
-    if item in inventory:
-        return jsonify({'success': False, 'message': f'You already own {item}. Use equip instead.'}), 400
-    if data['currency'] >= price:
+    if item in data.get('inventory', []):
+        print("FAIL: already owned")
+        return jsonify({'success': False, 'message': f'You already own {item}.'}), 400
+    if data.get('currency', 0) >= price:
         data['currency'] -= price
-        inventory.append(item)
-        data['inventory'] = inventory
+        data.setdefault('inventory', []).append(item)
         data['equipped_hat'] = item
         save_pet_data(data)
-        return jsonify({'success': True, 'message': f'Bought and equipped {item}!', 'currency': data['currency'], 'inventory': inventory, 'equipped_hat': item})
+        print(f"SUCCESS: bought {item}, new currency={data['currency']}")
+        return jsonify({'success': True, 'currency': data['currency'], 'inventory': data['inventory']})
     else:
+        print(f"FAIL: not enough coins. Has {data.get('currency')}, needs {price}")
         return jsonify({'success': False, 'message': 'Not enough coins!'})
 
 @app.route('/api/shop/equip', methods=['POST'])

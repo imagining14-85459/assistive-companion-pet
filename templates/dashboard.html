@@ -931,14 +931,14 @@
 
     function triggerPop(id){const e=document.getElementById(id);e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');e.addEventListener('animationend',()=>e.classList.remove('pop'),{once:true});}
 
-    function showPage(p,e){
-        document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-        document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
-        document.getElementById(p+'-page').classList.add('active');
-        if(e&&e.target)e.target.classList.add('active');
-        if(p==='shop')updateShop();
-        else if(p==='learning')updateLearningTopics();
-    }
+    function showPage(p, e) {
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(x => x.classList.remove('active'));
+    document.getElementById(p + '-page').classList.add('active');
+    if (e && e.target) e.target.classList.add('active');
+    if (p === 'shop') updateShop();
+    else if (p === 'learning') updateLearningTopics();
+}
 
     async function loadStats(){
         try{const r=await fetch('/api/stats');stats=await r.json();updateUI();}
@@ -965,13 +965,75 @@
         const oi=document.getElementById('overlay-indicator'),ob=document.getElementById('overlay-btn');
         if(overlayEnabled){oi.className='overlay-pill on';oi.textContent='✦ Overlay Active';ob.textContent='Disable Overlay';ob.className='btn btn-primary';}
         else{oi.className='overlay-pill off';oi.textContent='✦ Overlay Off';ob.textContent='Enable Overlay 🐾';ob.className='btn btn-outline';}
-        updateShop();
     }
 
-    function updateShop(){
-        const c=document.getElementById('shop-items');if(!c)return;
-        c.innerHTML=shopItems.map(i=>`<div class="shop-item"><div class="item-emoji">${i.emoji}</div><div class="item-info"><div class="item-name">${i.name}</div><div class="item-price">🪙 ${i.price} coins</div></div><button class="shop-btn" onclick="buyItem('${i.name}',${i.price})" ${(stats.currency||0)<i.price?'disabled':''}>Buy</button></div>`).join('');
-    }
+    function updateShop() {
+    const c = document.getElementById('shop-items');
+    if (!c) return;
+    c.innerHTML = shopItems.map(i => {
+        const icon = i.img
+            ? `<img src="${i.img}" alt="${i.name}" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block;">`
+            : i.emoji;
+
+        const owned = (stats.inventory || []).includes(i.name);
+        const equipped = stats.equipped_hat === i.name;
+
+        let button;
+        if (equipped) {
+            button = `<button class="shop-btn" style="background:var(--gold);color:var(--wood-dark);" disabled>✓ Equipped</button>`;
+        } else if (owned) {
+            button = `<button class="shop-btn" onclick="equipHat('${i.name}')">Equip</button>`;
+        } else {
+            button = `<button class="shop-btn" onclick="buyItem('${i.name}', ${i.price})" ${(stats.currency || 0) < i.price ? 'disabled' : ''}>Buy</button>`;
+        }
+
+        return `
+            <div class="shop-item">
+                <div class="item-emoji" style="overflow:hidden;">${icon}</div>
+                <div class="item-info">
+                    <div class="item-name">${i.name}</div>
+                    <div class="item-price">🪙 ${i.price} coins</div>
+                </div>
+                ${button}
+            </div>`;
+    }).join('');
+}
+
+function buyItem(name, price) {
+    if ((stats.currency || 0) < price) return;
+    fetch('/api/shop/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: name })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Bought ${name}! 🎉`);
+            loadStats();
+        } else {
+            showNotification(data.message || 'Purchase failed!');
+        }
+    })
+    .catch(() => showNotification('Server error!'));
+}
+
+function equipHat(name) {
+    fetch('/api/shop/equip', {  // ← change from /api/hat/equip to /api/shop/equip
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: name })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Equipped ${name}! 🎩`);
+            loadStats();
+        } else {
+            showNotification(data.message || 'Equip failed!');
+        }
+    });
+}
 
     function updateLearningTopics(){
         const t=stats.learning_topics||[],c=document.getElementById('learning-topics');
@@ -1062,8 +1124,6 @@
         await fetch('/api/webcam/stop',{method:'POST'}).catch(()=>{});
         showNotification('Webcam stopped 📷');
     }
-
-    function buyItem(name,price){if((stats.currency||0)<price)return;stats.currency-=price;fetch('/api/shop/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:name})}).catch(()=>{});showNotification(`Bought ${name}! 🎉`);updateUI();}
 
     function showNotification(msg){const n=document.getElementById('notification');document.getElementById('notif-text').textContent=msg;n.classList.remove('hiding');n.classList.add('show');clearTimeout(n._t);n._t=setTimeout(()=>{n.classList.add('hiding');setTimeout(()=>{n.classList.remove('show','hiding');},350);},2800);}
 

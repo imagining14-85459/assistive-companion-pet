@@ -1,5 +1,5 @@
 {
-    "currency": 0,
+    "currency": 300,
     "xp": 0,
     "level": 1,
     "inventory": [],
@@ -18,5 +18,7 @@
     },
     "overlay_enabled": true,
     "last_ai_output": null,
-    "last_ai_time": null
+    "last_ai_time": null,
+    "dashboard_last_seen": null,
+    "font_size": 11
 }

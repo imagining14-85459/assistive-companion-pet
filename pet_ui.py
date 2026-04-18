@@ -352,7 +352,11 @@ class PetUI:
     def draw(self, pet: Pet):
         """Main draw function"""
         self.screen.fill(self.trans_color)
+
+        if self.frame % 60 == 0:
+            pet.sync_from_data()
         
+    
         # Load current mode
         try:
             with open("pet_data.json", "r") as f:
