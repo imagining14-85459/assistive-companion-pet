@@ -29,9 +29,19 @@ def main():
     session_start = time.time()
 
     running = True
+    current_destination = pyautogui.position()
+    idle = 0
+    prev_mouse_pos = pyautogui.position()
     while running:
         current_time = time.time()
-        
+        if prev_mouse_pos == pyautogui.position():
+            idle += 1
+        else:
+            prev_mouse_pos = pyautogui.position()
+            idle = 0
+        if idle > 30 * 10:
+            pet.state = "follow"
+            ui.show_speech_bubble("Give me attention!", 5)
         # Check clipboard periodically
         if current_time - last_clipboard_check >= clipboard_check_interval:
             last_clipboard_check = current_time
@@ -41,13 +51,16 @@ def main():
                 # Text copied! Show menu
                 ui.toggle_menu(True)
                 print(f"📋 Copied text: {clipboard_text[:50]}...")
-        current_destination = pyautogui.position() # TODO: right now it just follows, change to move cmd
+
+        if pet.state == "follow":
+            current_destination = pyautogui.position()
         # Handle pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
             if event.type == pygame.MOUSEMOTION and pet.held_down:
+                current_destination = pyautogui.position()
                 dx,dy = event.rel
                 pet.speed = (dx**2 + dy**2)**0.5
                 pet.take_step(current_destination[0], current_destination[1])
@@ -66,6 +79,8 @@ def main():
                 if pet.held_down: # lets the pet go
                     pet.held_down = False
                     pet.speed = 10
+                    current_destination = pyautogui.position()
+                    pet.state = "stay"
 
             if event.type == pygame.KEYDOWN:
                 # Menu navigation
