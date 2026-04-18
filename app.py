@@ -1,15 +1,20 @@
-# debug imports
-import threading
-import time
-
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import json
 import subprocess
 import os
+import threading
+import time
 import socket
 import numpy as np
 import sys
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Optional imports for Focus mode/webcam
 try:
@@ -25,11 +30,10 @@ CORS(app)
 def send_to_overlay(message):
     """Send message to overlay via IPC socket"""
     try:
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(1.0)  # Timeout after 1 second
-        client.connect(('localhost', 5002))
-        client.send(message.encode('utf-8'))
-        client.close()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+            client.settimeout(1.0)  # Timeout after 1 second
+            client.connect(('localhost', 5002))
+            client.sendall(message.encode('utf-8'))
     except Exception:
         pass  # Overlay not running or connection failed
 
@@ -45,7 +49,14 @@ def get_pet_data():
         with open("pet_data.json", "r") as f:
             return json.load(f)
     except:
-        return {}
+        data = {}
+    
+    # Ensure overlay is enabled by default
+    if 'overlay_enabled' not in data:
+        data['overlay_enabled'] = True
+        save_pet_data(data)
+    
+    return data
 
 def save_pet_data(data):
     """Save pet data to JSON"""
@@ -55,23 +66,23 @@ def save_pet_data(data):
 def webcam_feed_thread():
     """Capture webcam feed for focus detection"""
     global latest_frame, webcam_active
-
+    
     if not FOCUS_MODE_AVAILABLE:
         print("⚠️  Focus mode not available (missing cv2/mediapipe)")
         return
-
+    
     try:
         face_mesh = mp.solutions.face_mesh.FaceMesh(refine_landmarks=True)
         cap = cv2.VideoCapture(0)
-
+        
         while webcam_active:
             ret, frame = cap.read()
             if not ret:
                 continue
-
+            
             # Detect faces
             results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
+            
             # Draw face detection on frame
             if results.multi_face_landmarks:
                 for landmarks in results.multi_face_landmarks:
@@ -80,10 +91,10 @@ def webcam_feed_thread():
                         h, w, c = frame.shape
                         x, y = int(lm.x * w), int(lm.y * h)
                         cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
-
+            
             latest_frame = frame
             time.sleep(0.03)  # ~30 FPS
-
+        
         cap.release()
     except Exception as e:
         print(f"⚠️  Webcam error: {e}")
@@ -104,7 +115,11 @@ def get_stats():
         'mode': data.get('mode', 'default'),
         'total_study_time': data.get('total_study_time', 0),
         'equipped_hat': data.get('equipped_hat', None),
+        'inventory': data.get('inventory', []),
         'overlay_enabled': data.get('overlay_enabled', True),
+        'study_session_active': data.get('study_session', {}).get('active', False),
+        'session_start_time': data.get('study_session', {}).get('start_time'),
+        'font_size': data.get('font_size', 11),
         'learning_topics': get_learning_topics()
     })
 
@@ -130,41 +145,61 @@ def buy_item():
     }
     
     data = get_pet_data()
-    price = prices.get(item, 0)
+    inventory = data.get('inventory', [])
+    price = prices.get(item)
     
+    if price is None:
+        return jsonify({'success': False, 'message': 'Item not found.'}), 400
+    if item in inventory:
+        return jsonify({'success': False, 'message': f'You already own {item}. Use equip instead.'}), 400
     if data['currency'] >= price:
         data['currency'] -= price
+        inventory.append(item)
+        data['inventory'] = inventory
         data['equipped_hat'] = item
         save_pet_data(data)
-        return jsonify({'success': True, 'message': f'Bought {item}!', 'currency': data['currency']})
+        return jsonify({'success': True, 'message': f'Bought and equipped {item}!', 'currency': data['currency'], 'inventory': inventory, 'equipped_hat': item})
     else:
         return jsonify({'success': False, 'message': 'Not enough coins!'})
+
+@app.route('/api/shop/equip', methods=['POST'])
+def equip_item():
+    """Equip an owned accessory"""
+    item = request.json.get('item')
+    data = get_pet_data()
+    inventory = data.get('inventory', [])
+    if item not in inventory:
+        return jsonify({'success': False, 'message': f'{item} is not in your inventory.'}), 400
+    data['equipped_hat'] = item
+    save_pet_data(data)
+    return jsonify({'success': True, 'message': f'Equipped {item}.', 'equipped_hat': item})
 
 @app.route('/api/webcam/start', methods=['POST'])
 def start_webcam():
     """Start webcam feed for Focus mode"""
     global webcam_thread, webcam_active
-
+    
     if not webcam_active:
         webcam_active = True
         webcam_thread = threading.Thread(target=webcam_feed_thread, daemon=True)
         webcam_thread.start()
-
+    
     return jsonify({'status': 'Webcam started'})
 
-def debug_window_loop(debug_frame):
-    while True:
-        if debug_frame is not None:
-            cv2.imshow("Debug Face Mesh", debug_frame)
-            cv2.waitKey(1)
-        time.sleep(.5)
+@app.route('/api/webcam/stop', methods=['POST'])
+def stop_webcam():
+    """Stop webcam feed"""
+    global webcam_active
+    webcam_active = False
+    return jsonify({'status': 'Webcam stopped'})
+
 @app.route('/api/webcam/detect', methods=['POST'])
 def detect_faces():
     """Process webcam frame for face detection"""
     try:
         if not FOCUS_MODE_AVAILABLE:
             return jsonify({'face_detected': False, 'error': 'Focus mode not available'})
-
+        
         if 'frame' not in request.files:
             return jsonify({'face_detected': False, 'error': 'No frame provided'})
         
@@ -184,39 +219,26 @@ def detect_faces():
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
         # Initialize face mesh if not already done
-        mp_face_mesh = mp.solutions.face_mesh
-        face_mesh = mp_face_mesh.FaceMesh(
-            max_num_faces=1,
-            refine_landmarks=True,
-            min_detection_confidence=0.3,  # Lower threshold
-            min_tracking_confidence=0.3   # Lower threshold
-        )
-
+        global face_mesh
+        if face_mesh is None:
+            try:
+                import mediapipe as mp
+                mp_face_mesh = mp.solutions.face_mesh
+                face_mesh = mp_face_mesh.FaceMesh(
+                    max_num_faces=1,
+                    refine_landmarks=True,
+                    min_detection_confidence=0.1,  # Lower threshold for better detection
+                    min_tracking_confidence=0.1   # Lower threshold
+                )
+            except ImportError:
+                return jsonify({'face_detected': False, 'error': 'MediaPipe not available'})
+        
         # Process the frame
         results = face_mesh.process(rgb_frame)
         
         # Check if face is detected
         face_detected = results.multi_face_landmarks is not None and len(results.multi_face_landmarks) > 0
-
-        # mp_drawing = mp.solutions.drawing_utils
-        # if face_detected:
-        #     print("face detected")
-        #     for face_landmarks in results.multi_face_landmarks:
-        #         mp_drawing.draw_landmarks(
-        #             image=frame,
-        #             landmark_list=face_landmarks,
-        #             connections=mp_face_mesh.FACEMESH_TESSELATION,
-        #             landmark_drawing_spec=None,
-        #             connection_drawing_spec=mp_drawing.DrawingSpec(
-        #                 color=(0, 255, 0),
-        #                 thickness=1,
-        #                 circle_radius=1
-        #             )
-        #         )
-        #
-        #     # TEMPORARY DEBUG WINDOW
-        #     threading.Thread(target=debug_window_loop, args=(frame,)).start()
-
+        
         return jsonify({'face_detected': face_detected})
         
     except Exception as e:
@@ -228,7 +250,7 @@ def get_webcam_frame():
     """Get current webcam frame (placeholder for live streaming)"""
     if latest_frame is None:
         return jsonify({'frame': None})
-
+    
     # In production, encode frame as base64 and send
     # For now, just return status
     return jsonify({'status': 'Webcam active', 'frame_available': True})
@@ -241,7 +263,109 @@ def toggle_overlay():
     new_state = not current_state
     data['overlay_enabled'] = new_state
     save_pet_data(data)
+    
+    # If enabling, ensure the overlay process is responsive
+    if new_state:
+        # Send a signal to overlay (if running) that it's enabled
+        try:
+            send_to_overlay("Overlay re-enabled")
+        except:
+            pass
+    
     return jsonify({'overlay_enabled': new_state, 'message': f'Overlay {"enabled" if new_state else "disabled"}'})
+
+@app.route('/api/overlay/tab_open', methods=['POST'])
+def overlay_tab_open():
+    """Register that a dashboard tab is open."""
+    data = get_pet_data()
+    data['dashboard_tab_count'] = data.get('dashboard_tab_count', 0) + 1
+    data['dashboard_last_seen'] = time.time()
+    save_pet_data(data)
+    return jsonify({
+        'dashboard_tab_count': data['dashboard_tab_count'],
+        'dashboard_last_seen': data['dashboard_last_seen']
+    })
+
+@app.route('/api/overlay/tab_closed', methods=['POST'])
+def overlay_tab_closed():
+    """Register that a dashboard tab has closed."""
+    data = get_pet_data()
+    data['dashboard_tab_count'] = max(data.get('dashboard_tab_count', 0) - 1, 0)
+    data['dashboard_last_seen'] = time.time()
+    save_pet_data(data)
+    return jsonify({'dashboard_tab_count': data['dashboard_tab_count']})
+
+@app.route('/api/overlay/heartbeat', methods=['POST'])
+def overlay_heartbeat():
+    """Keep the dashboard alive with periodic heartbeat pings."""
+    data = get_pet_data()
+    data['dashboard_last_seen'] = time.time()
+    save_pet_data(data)
+    return jsonify({'dashboard_last_seen': data['dashboard_last_seen']})
+
+@app.route('/api/study/session/start', methods=['POST'])
+def start_study_session():
+    """Begin a study session for earning coins in Default mode."""
+    data = get_pet_data()
+    session = data.get('study_session', {})
+    if session.get('active'):
+        return jsonify({'success': False, 'message': 'A study session is already active.', 'start_time': session['start_time']})
+    data['study_session'] = {
+        'active': True,
+        'start_time': time.time()
+    }
+    save_pet_data(data)
+    return jsonify({'success': True, 'message': 'Study session started.'})
+
+@app.route('/api/study/session/end', methods=['POST'])
+def end_study_session():
+    """End the study session and award coins."""
+    data = get_pet_data()
+    session = data.get('study_session', {})
+    if not session.get('active'):
+        return jsonify({'success': False, 'message': 'No active study session.'}), 400
+    duration = time.time() - session['start_time']
+    coins = max(1, int(duration / 60 * 2))
+    xp_gain = max(1, int(duration / 60 * 3))
+    data['currency'] = data.get('currency', 0) + coins
+    data['xp'] = data.get('xp', 0) + xp_gain
+    data['total_study_time'] = data.get('total_study_time', 0) + duration
+    data['study_session'] = {
+        'active': False,
+        'last_duration': duration,
+        'last_reward': coins,
+        'last_xp': xp_gain,
+        'ended_at': time.time()
+    }
+    # Level up if XP passes threshold
+    level = data.get('level', 1)
+    while data['xp'] >= level * 100:
+        data['xp'] -= level * 100
+        level += 1
+    data['level'] = level
+    save_pet_data(data)
+    return jsonify({
+        'success': True,
+        'message': f'Study session ended. Earned {coins} coins!',
+        'coins': coins,
+        'xp': xp_gain,
+        'duration': duration
+    })
+
+@app.route('/api/settings/font_size', methods=['POST'])
+def update_font_size():
+    """Update font size setting"""
+    data = get_pet_data()
+    try:
+        new_size = int(request.json.get('font_size', 11))
+        if 8 <= new_size <= 24:  # Reasonable range
+            data['font_size'] = new_size
+            save_pet_data(data)
+            return jsonify({'success': True, 'font_size': new_size})
+        else:
+            return jsonify({'success': False, 'message': 'Font size must be between 8 and 24'}), 400
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid font size'}), 400
 
 def get_learning_topics():
     """Get learning topics summary"""
@@ -273,30 +397,30 @@ def get_learning_topics():
 @app.route('/api/focus/metrics', methods=['GET'])
 def get_focus_metrics():
     """Get detailed focus metrics for Focus mode
-
+    
     Returns focus state, time away, attention level, and nudge/mad status
     """
     try:
         from pet_brain import PetBrain
-
+        
         data = get_pet_data()
         current_mode = data.get('mode', 'default')
-
+        
         # Create a PetBrain instance to get focus metrics
         pet_brain = PetBrain(mode=current_mode)
         metrics = pet_brain.get_focus_metrics()
-
+        
         # Update pet data with focus tracking
         if current_mode == 'focus':
             if 'focus_metrics' not in data:
                 data['focus_metrics'] = {}
-
+            
             data['focus_metrics'].update({
                 'time_away_seconds': metrics['time_away_seconds'],
                 'attention_state': metrics['attention_state'],
                 'last_check': time.time()
             })
-
+            
             # Track if we should show pet reactions
             if metrics['should_be_mad']:
                 data['focus_metrics']['pet_reaction'] = 'mad'
@@ -304,19 +428,19 @@ def get_focus_metrics():
                 data['focus_metrics']['pet_reaction'] = 'nudge'
             else:
                 data['focus_metrics']['pet_reaction'] = 'normal'
-
+            
             save_pet_data(data)
-
+        
         # Clean up resources
         pet_brain.stop()
-
+        
         return jsonify({
             'mode': current_mode,
             'metrics': metrics,
             'pet_should_react': metrics['should_nudge'] or metrics['should_be_mad'],
             'pet_reaction': data.get('focus_metrics', {}).get('pet_reaction', 'normal')
         })
-
+    
     except ImportError:
         return jsonify({
             'error': 'PetBrain not available',
@@ -340,14 +464,14 @@ def get_focus_metrics():
 def start_focus_session():
     """Start a focus tracking session"""
     data = get_pet_data()
-
+    
     data['focus_session'] = {
         'start_time': time.time(),
         'mode': 'focus'
     }
-
+    
     save_pet_data(data)
-
+    
     return jsonify({
         'success': True,
         'message': 'Focus session started',
@@ -358,21 +482,21 @@ def start_focus_session():
 def end_focus_session():
     """End a focus tracking session and save statistics"""
     data = get_pet_data()
-
+    
     if 'focus_session' not in data or 'start_time' not in data['focus_session']:
         return jsonify({
             'success': False,
             'message': 'No active focus session'
         })
-
+    
     session_duration = time.time() - data['focus_session']['start_time']
-
+    
     # Update statistics
     data['total_study_time'] = data.get('total_study_time', 0) + session_duration
     data['focus_session'] = {}
-
+    
     save_pet_data(data)
-
+    
     return jsonify({
         'success': True,
         'message': 'Focus session ended',
@@ -388,23 +512,23 @@ def analyze_clipboard():
         text = data.get('text', '')
         intent = data.get('intent', 'simplify')
         target_language = data.get('target_language')
-
+        
         if not text.strip():
             return jsonify({'error': 'No text provided'}), 400
-
+        
         from pet_brain import PetBrain
         brain = PetBrain()
         result = brain.analyze_clipboard_text(text, intent, target_language)
         brain.stop()
-
+        
         pet_data = get_pet_data()
         pet_data['last_ai_output'] = result
         pet_data['last_ai_time'] = time.time()
         save_pet_data(pet_data)
-
+        
         # Send to overlay immediately
         send_to_overlay(result)
-
+        
         return jsonify({'result': result})
     except Exception as e:
         print(f"AI analysis error: {e}")
@@ -416,20 +540,20 @@ def study_screen():
     try:
         data = request.json
         question = data.get('question', 'Explain this study material for a student with ADHD.')
-
+        
         from pet_brain import PetBrain
         brain = PetBrain()
         result = brain.study_the_screen(question)
         brain.stop()
-
+        
         pet_data = get_pet_data()
         pet_data['last_ai_output'] = result
         pet_data['last_ai_time'] = time.time()
         save_pet_data(pet_data)
-
+        
         # Send to overlay immediately
         send_to_overlay(result)
-
+        
         return jsonify({'result': result})
     except Exception as e:
         print(f"Screen study error: {e}")
@@ -442,23 +566,23 @@ def translate_text():
         data = request.json
         text = data.get('text', '')
         target_language = data.get('target_language', 'es')
-
+        
         if not text.strip():
             return jsonify({'error': 'No text provided'}), 400
-
+        
         from pet_brain import PetBrain
         brain = PetBrain()
         result = brain.translate_text(text, target_language)
         brain.stop()
-
+        
         pet_data = get_pet_data()
         pet_data['last_ai_output'] = result
         pet_data['last_ai_time'] = time.time()
         save_pet_data(pet_data)
-
+        
         # Send to overlay immediately
         send_to_overlay(result)
-
+        
         return jsonify({'result': result})
     except Exception as e:
         print(f"Translation error: {e}")
@@ -470,31 +594,31 @@ def explain_image():
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
-
+        
         image_file = request.files['image']
         question = request.form.get('question', 'What is this?')
-
+        
         # Save temporarily
         import tempfile
         import os
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
             image_file.save(tmp.name)
             tmp_path = tmp.name
-
+        
         try:
             from pet_brain import PetBrain
             brain = PetBrain()
             result = brain.explain_image(tmp_path, question)
             brain.stop()
-
+            
             pet_data = get_pet_data()
             pet_data['last_ai_output'] = result
             pet_data['last_ai_time'] = time.time()
             save_pet_data(pet_data)
-
+            
             # Send to overlay immediately
             send_to_overlay(result)
-
+            
             return jsonify({'result': result})
         finally:
             os.unlink(tmp_path)
