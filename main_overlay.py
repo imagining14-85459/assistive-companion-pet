@@ -14,7 +14,10 @@ def main():
         with open("pet_data.json", "r") as f:
             data = json.load(f)
     except FileNotFoundError as e:
-        data = {}
+        with open("default_pet_info.json", "r") as f:
+            data=json.load(f)
+            with open("pet_data.json", "w") as g:
+                json.dump(data, g)
 
     ui = PetUI(size = pyautogui.size())
     brain = PetBrain(mode="default")  # Default mode for overlay
@@ -22,9 +25,7 @@ def main():
 
     pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10, data["equipped_hat"])
     # Clipboard monitoring
-    last_clipboard_check = 0
-    clipboard_check_interval = 0.5  # Check every 0.5 seconds
-    
+
     # Study Session Tracker
     session_start = time.time()
 
@@ -33,6 +34,9 @@ def main():
     idle = 0
     prev_mouse_pos = pyautogui.position()
     while running:
+        # Update pet data for stats/cosmetics
+        with open("pet_data.json", "r") as f: # updates json data
+            data = json.load(f)
         current_time = time.time()
         if prev_mouse_pos == pyautogui.position():
             idle += 1
@@ -42,15 +46,6 @@ def main():
         if idle > 30 * 10:
             pet.state = "follow"
             ui.show_speech_bubble("Give me attention!", 5)
-        # Check clipboard periodically
-        if current_time - last_clipboard_check >= clipboard_check_interval:
-            last_clipboard_check = current_time
-            clipboard_text = brain.check_clipboard()
-            
-            if clipboard_text:
-                # Text copied! Show menu
-                ui.toggle_menu(True)
-                print(f"📋 Copied text: {clipboard_text[:50]}...")
 
         if pet.state == "follow":
             current_destination = pyautogui.position()
@@ -124,7 +119,11 @@ def main():
                 # Global hotkeys
                 if event.key == pygame.K_c and event.mod & pygame.KMOD_CTRL:
                     # Ctrl+C - Already handled by OS, but we can trigger menu
-                    pass
+                    clipboard_text = brain.check_clipboard()
+                    if clipboard_text:
+                        # Text copied! Show menu
+                        ui.toggle_menu(True)
+                        print(f"📋 Copied text: {clipboard_text[:50]}...")
 
         # Movement logic
         if abs(current_destination[0] - pet.x) > pet.size or abs(current_destination[1] - pet.y) > pet.size:
@@ -137,8 +136,6 @@ def main():
     
     brain.stop()
     pygame.quit()
-    with open("pet_data.json", "w") as f:
-        json.dump(data, f, indent=4)
 
 if __name__ == "__main__":
     main()
