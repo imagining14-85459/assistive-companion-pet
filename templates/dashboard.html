@@ -945,59 +945,26 @@
         catch(e){if(!stats.level){stats={level:3,currency:220,xp:47,mode:'default',total_study_time:5820,overlay_enabled:true,learning_topics:[]};updateUI();}}
     }
 
-    function updateUI() {
-        const prevLevel = document.getElementById('level').textContent;
-        const prevCoins = document.getElementById('currency').textContent;
-        
-
-        document.getElementById('level').textContent = stats.level;
-        document.getElementById('currency').textContent = Math.floor(stats.currency);
-        document.getElementById('hud-coins').textContent = Math.floor(stats.currency);
-
-        if (String(stats.level) !== prevLevel) triggerPop('level');
-        if (String(Math.floor(stats.currency)) !== prevCoins) triggerPop('currency');
-
-        const maxXP = stats.level * 100;
-        const xpPercent = (stats.xp / maxXP) * 100;
-        document.getElementById('xp-fill').style.width = xpPercent + '%';
-        document.getElementById('xp-text').textContent = `${Math.floor(stats.xp)} / ${Math.floor(maxXP)}`;
-
-        currentMode = stats.mode;
-        const indicator = document.getElementById('mode-indicator');
-        const btn = document.getElementById('mode-btn');
-
-        if (currentMode === 'focus') {
-            indicator.className = 'mode-badge focus';
-            indicator.innerHTML = '<span class="dot"></span> Focus Mode';
-            btn.textContent = 'Switch to Default Mode';
-            btn.className = 'btn btn-danger';
-        } else {
-            indicator.className = 'mode-badge default';
-            indicator.innerHTML = '<span class="dot"></span> Default Mode';
-            btn.textContent = 'Switch to Focus Mode';
-            btn.className = 'btn btn-primary';
-        }
-
-        const hours = Math.floor(stats.total_study_time / 3600);
-        const minutes = Math.floor((stats.total_study_time % 3600) / 60);
-        document.getElementById('total-time').textContent = `${hours}h ${minutes}m`;
-
-        overlayEnabled = stats.overlay_enabled;
-        const oIndicator = document.getElementById('overlay-indicator');
-        const oBtn = document.getElementById('overlay-btn');
-
-        if (overlayEnabled) {
-            oIndicator.className = 'overlay-pill on';
-            oIndicator.textContent = '✦ Overlay Active';
-            oBtn.textContent = 'Disable Overlay';
-            oBtn.className = 'btn btn-primary';
-        } else {
-            oIndicator.className = 'overlay-pill off';
-            oIndicator.textContent = '✦ Overlay Off';
-            oBtn.textContent = 'Enable Overlay 🐾';
-            oBtn.className = 'btn btn-outline';
-        }
-
+    function updateUI(){
+        const pl=document.getElementById('level').textContent;
+        const pc=document.getElementById('currency').textContent;
+        document.getElementById('level').textContent=stats.level;
+        document.getElementById('currency').textContent=Math.floor(stats.currency);
+        if(String(stats.level)!==pl)triggerPop('level');
+        if(String(Math.floor(stats.currency))!==pc)triggerPop('currency');
+        const mx=stats.level*100;
+        document.getElementById('xp-fill').style.width=(stats.xp/mx*100)+'%';
+        document.getElementById('xp-text').textContent=`${Math.floor(stats.xp)} / ${Math.floor(mx)}`;
+        currentMode=stats.mode;
+        const ind=document.getElementById('mode-indicator'),btn=document.getElementById('mode-btn');
+        if(currentMode==='focus'){ind.className='mode-badge focus';ind.innerHTML='<span class="dot"></span> Focus Mode';btn.textContent='Switch to Default Mode';btn.className='btn btn-danger';}
+        else{ind.className='mode-badge default';ind.innerHTML='<span class="dot"></span> Default Mode';btn.textContent='Switch to Focus Mode';btn.className='btn btn-primary';}
+        const h=Math.floor(stats.total_study_time/3600),m=Math.floor((stats.total_study_time%3600)/60);
+        document.getElementById('total-time').textContent=`${h}h ${m}m`;
+        overlayEnabled=stats.overlay_enabled;
+        const oi=document.getElementById('overlay-indicator'),ob=document.getElementById('overlay-btn');
+        if(overlayEnabled){oi.className='overlay-pill on';oi.textContent='✦ Overlay Active';ob.textContent='Disable Overlay';ob.className='btn btn-primary';}
+        else{oi.className='overlay-pill off';oi.textContent='✦ Overlay Off';ob.textContent='Enable Overlay 🐾';ob.className='btn btn-outline';}
         updateShop();
     }
 
@@ -1012,50 +979,25 @@
         c.innerHTML=t.map(([topic,count],i)=>`<div class="learning-item ${i<3?'top':''}"><div><div class="topic-name">${topic}</div><div class="topic-count">Struggled ${count} time${count>1?'s':''}</div></div><div class="rank-badge ${i<3?'':'regular'}">#${i+1}</div></div>`).join('');
     }
 
-    async function toggleOverlay() {
-        try {
-            const response = await fetch('/api/overlay/toggle', { method: 'POST' });
-            const data = await response.json();
-            showNotification(data.message);
-            loadStats();
-        } catch (e) {
-            stats.overlay_enabled = !stats.overlay_enabled;
-            updateUI();
-            showNotification('Overlay toggled!');
-        }
-    }
+    async function toggleMode(){try{const r=await fetch('/api/mode',{method:'POST'});const d=await r.json();showNotification(d.message);loadStats();}catch(e){stats.mode=stats.mode==='focus'?'default':'focus';updateUI();showNotification('Mode switched!');}}
+    async function toggleOverlay(){try{const r=await fetch('/api/overlay/toggle',{method:'POST'});const d=await r.json();showNotification(d.message);loadStats();}catch(e){stats.overlay_enabled=!stats.overlay_enabled;updateUI();showNotification('Overlay toggled!');}}
 
-    async function startWebcam() {
-        document.getElementById('webcam-start-btn').disabled = true;  
-        document.getElementById('webcam-stop-btn').disabled = false;  
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            webcamStream = stream;
-            focusStreak = 0; focusAlertCount = 0; focusFrames = 0; focusedFrames = 0;
-            updateFocusStats();
-            const video = document.createElement('video');
-            video.srcObject = stream;
-            video.autoplay = true;
-            video.style.width = '100%';
-            const canvas = document.getElementById('webcam-canvas');
-            const ctx = canvas.getContext('2d');
-            video.onloadedmetadata = () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.style.display = 'block';
-                document.getElementById('webcam-placeholder').style.display = 'none';
-                document.getElementById('webcam-live-bar').style.display = 'flex';
-                document.getElementById('live-badge').style.display = 'inline-flex';
-                streakInterval = setInterval(() => {
-                    focusStreak++;
-                    document.getElementById('streak-label').textContent = `Streak: ${focusStreak}s 🔥`;
-                    updateFocusStats();
-                }, 1000);
-                processWebcamFrames(video, canvas, ctx);
+    async function startWebcam(){
+        try{
+            const stream=await navigator.mediaDevices.getUserMedia({video:true});
+            webcamStream=stream;focusStreak=0;focusAlertCount=0;focusFrames=0;focusedFrames=0;updateFocusStats();
+            const vid=document.createElement('video');vid.srcObject=stream;vid.autoplay=true;vid.style.width='100%';
+            const cv=document.getElementById('webcam-canvas');const ctx=cv.getContext('2d');
+            vid.onloadedmetadata=()=>{
+                cv.width=vid.videoWidth;cv.height=vid.videoHeight;cv.style.display='block';
+                document.getElementById('webcam-placeholder').style.display='none';
+                document.getElementById('webcam-live-bar').style.display='flex';
+                document.getElementById('live-badge').style.display='inline-flex';
+                streakInterval=setInterval(()=>{focusStreak++;document.getElementById('streak-label').textContent=`Streak: ${focusStreak}s 🔥`;updateFocusStats();},1000);
+                processFrames(vid,cv,ctx);
             };
-            video.style.display = 'none'; // Hides duplicate video element
-            document.getElementById('webcam-container').appendChild(video);
-            await fetch('/api/webcam/start', { method: 'POST' }).catch(() => {});
+            document.getElementById('webcam-container').appendChild(vid);
+            await fetch('/api/webcam/start',{method:'POST'}).catch(()=>{});
             showNotification('Webcam started! 👀');
         }catch(e){showNotification('Could not access webcam: '+e.message);}
     }
@@ -1070,41 +1012,18 @@
         requestAnimationFrame(()=>processFrames(vid,cv,ctx));
     }
 
-    function updateFocusStats() {
-        const pct = focusFrames > 0 ? Math.round((focusedFrames / focusFrames) * 100) : null;
-        document.getElementById('focus-pct').textContent = pct !== null ? pct + '%' : '—';
-        document.getElementById('focus-streak').textContent = focusStreak;
-        document.getElementById('focus-alerts').textContent = focusAlertCount;
-    }
+    function updateFocusStats(){const p=focusFrames>0?Math.round(focusedFrames/focusFrames*100):null;document.getElementById('focus-pct').textContent=p!==null?p+'%':'—';document.getElementById('focus-streak').textContent=focusStreak;document.getElementById('focus-alerts').textContent=focusAlertCount;}
+    function showFocusAlert(){const a=document.getElementById('focus-alert');if(a.style.display==='none'||!a.style.display){focusAlertCount++;focusStreak=0;document.getElementById('streak-label').textContent='Streak: 0s 🔥';}a.style.display='flex';if(focusAlertTimeout)clearTimeout(focusAlertTimeout);focusAlertTimeout=setTimeout(hideFocusAlert,3000);}
+    function hideFocusAlert(){document.getElementById('focus-alert').style.display='none';if(focusAlertTimeout){clearTimeout(focusAlertTimeout);focusAlertTimeout=null;}}
 
-    function showFocusAlert() {
-        const alertEl = document.getElementById('focus-alert');
-        if (alertEl.style.display === 'none' || alertEl.style.display === '') {
-            focusAlertCount++;
-            focusStreak = 0;
-            document.getElementById('streak-label').textContent = `Streak: 0s 🔥`;
-        }
-        alertEl.style.display = 'flex';
-        if (focusAlertTimeout) clearTimeout(focusAlertTimeout);
-        focusAlertTimeout = setTimeout(hideFocusAlert, 3000);
-    }
-
-    function hideFocusAlert() {
-        document.getElementById('focus-alert').style.display = 'none';
-        if (focusAlertTimeout) { clearTimeout(focusAlertTimeout); focusAlertTimeout = null; }
-    }
-
-    async function stopWebcam() {
-        document.getElementById('webcam-start-btn').disabled = false;  
-        document.getElementById('webcam-stop-btn').disabled = true; 
-        if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
-        if (streakInterval) { clearInterval(streakInterval); streakInterval = null; }
-        document.getElementById('webcam-canvas').style.display = 'none';
-        document.getElementById('webcam-placeholder').style.display = 'flex';
-        document.getElementById('webcam-live-bar').style.display = 'none';
-        document.getElementById('live-badge').style.display = 'none';
-        const video = document.querySelector('#webcam-container video');
-        if (video) video.remove();
+    async function stopWebcam(){
+        if(webcamStream){webcamStream.getTracks().forEach(t=>t.stop());webcamStream=null;}
+        if(streakInterval){clearInterval(streakInterval);streakInterval=null;}
+        document.getElementById('webcam-canvas').style.display='none';
+        document.getElementById('webcam-placeholder').style.display='flex';
+        document.getElementById('webcam-live-bar').style.display='none';
+        document.getElementById('live-badge').style.display='none';
+        const v=document.querySelector('#webcam-container video');if(v)v.remove();
         hideFocusAlert();
         await fetch('/api/webcam/stop',{method:'POST'}).catch(()=>{});
         showNotification('Webcam stopped 📷');
@@ -1122,19 +1041,5 @@
     setInterval(loadStats,1000);
     loadStats();
 </script>
-<div id="coin-hud" style="
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 999;
-    background: var(--gold);
-    border: 3px solid var(--wood-dark);
-    border-radius: 4px;
-    padding: 8px 14px;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.5em;
-    color: var(--wood-dark);
-    box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
-">🪙 <span id="hud-coins">0</span></div>
 </body>
 </html>
