@@ -72,7 +72,8 @@ class PetUI:
             import win32api, win32con, win32gui
             hwnd = pygame.display.get_wm_info()["window"]
             win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
-            win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
+            win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
+                                   win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
             win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*self.trans_color), 0, win32con.LWA_COLORKEY)
         else:
             try:
@@ -251,12 +252,14 @@ class PetUI:
             scrollbar_y = bubble_y + 10
 
             # Scrollbar background
-            pygame.draw.rect(self.screen, (200, 200, 200), (scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height), border_radius=4)
+            pygame.draw.rect(self.screen, (200, 200, 200),
+                             (scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height), border_radius=4)
 
             # Scrollbar handle
             handle_height = max(20, scrollbar_height * visible_lines // total_lines)
             handle_y = scrollbar_y + (scrollbar_height - handle_height) * start_line // (total_lines - visible_lines)
-            pygame.draw.rect(self.screen, (100, 100, 100), (scrollbar_x, handle_y, scrollbar_width, handle_height), border_radius=4)
+            pygame.draw.rect(self.screen, (100, 100, 100), (scrollbar_x, handle_y, scrollbar_width, handle_height),
+                             border_radius=4)
 
     def pet_menu(self, pet):
         """ Shows the menu, depending on whether the pet is shown or not. """

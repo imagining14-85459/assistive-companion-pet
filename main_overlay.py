@@ -49,7 +49,7 @@ def main():
     brain = PetBrain(mode="default")  # Default mode for overlay
     clock = pygame.time.Clock()
 
-    pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10, data["equipped_hat"])
+    pet = Pet(pyautogui.size()[0]/2, pyautogui.size()[1]/2, 10, data.get("equipped_hat", None))
 
     def start_ai_task(label, task_fn):
         ui.show_loading(label)
