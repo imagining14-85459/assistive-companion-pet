@@ -1,11 +1,9 @@
 {
-    "currency": 200,
+    "currency": 300,
     "xp": 0,
     "level": 1,
-    "inventory": [
-        "Sunglasses"
-    ],
-    "equipped_hat": "Sunglasses",
+    "inventory": [],
+    "equipped_hat": null,
     "current_session_time": 0,
     "last_session_duration": 0,
     "total_study_time": 0,
@@ -21,6 +19,6 @@
     "overlay_enabled": true,
     "last_ai_output": null,
     "last_ai_time": null,
-    "dashboard_last_seen": 1776539419.8460724,
+    "dashboard_last_seen": null,
     "font_size": 11
 }
