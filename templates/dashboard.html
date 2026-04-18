@@ -27,928 +27,841 @@
             --gold: #e8b820;
             --gold-light: #f8d840;
             --cream: #fdf6e3;
-            --pixel-shadow: 3px 3px 0px rgba(0,0,0,0.4);
-            --border-wood: 4px solid var(--wood-dark);
-            --inner-border: 2px solid var(--parchment-darker);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
-
-        @font-face { font-display: swap; }
-
         body {
             font-family: 'Nunito', sans-serif;
-            background: #87CEEB;
-            background-image:
-                linear-gradient(180deg, #87CEEB 0%, #b8e0f7 40%, #7ec850 40%, #5a8a3c 60%),
-                radial-gradient(ellipse at 20% 38%, white 0%, transparent 8%),
-                radial-gradient(ellipse at 50% 35%, white 0%, transparent 10%),
-                radial-gradient(ellipse at 80% 37%, white 0%, transparent 7%);
             min-height: 100vh;
             padding: 20px 16px 60px;
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            background: #5ba8e8;
         }
-
-        body::before {
+        /* ─── BG LAYERS ─── */
+        .bg-scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .bg-scene::before {
             content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(1px 1px at 15% 10%, white 0%, transparent 100%),
-                radial-gradient(1px 1px at 35% 7%, white 0%, transparent 100%),
-                radial-gradient(1.5px 1.5px at 55% 12%, white 0%, transparent 100%),
-                radial-gradient(1px 1px at 75% 8%, white 0%, transparent 100%),
-                radial-gradient(1px 1px at 90% 15%, white 0%, transparent 100%);
-            pointer-events: none;
-            z-index: 0;
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg,
+                #4a98d8 0%, #87CEEB 28%, #b8e4fa 50%,
+                #6db84a 50%, #4a7a2e 65%, #3d6426 100%);
         }
-
-        .container { max-width: 1080px; margin: 0 auto; position: relative; z-index: 1; }
-
-        /* ─── PIXEL PANEL BASE ─── */
-        .sdv-panel {
-            background: var(--parchment);
-            border: 5px solid var(--wood-dark);
-            border-radius: 4px;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.5), inset 0 0 0 2px var(--parchment-darker);
-            position: relative;
+        /* ground grid texture */
+        .bg-scene::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 52%;
+            background-image:
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.035) 0,rgba(0,0,0,0.035) 32px, transparent 32px, transparent 64px),
+                repeating-linear-gradient(0deg,  rgba(0,0,0,0.025) 0,rgba(0,0,0,0.025) 32px, transparent 32px, transparent 64px);
         }
+        .deco-svg { position: fixed; pointer-events: none; z-index: 0; }
+        .deco-left   { left: 0; top: 0; width: 165px; height: 100vh; }
+        .deco-right  { right: 0; top: 0; width: 165px; height: 100vh; }
+        .deco-top    { top: 0; left: 0; width: 100%; height: 230px; }
+        .deco-bottom { bottom: 0; left: 0; width: 100%; height: 120px; }
 
-        .sdv-panel::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border: 1px solid var(--parchment-darker);
-            border-radius: 2px;
-            pointer-events: none;
-        }
+        @keyframes cloudDrift1 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(20px)} }
+        @keyframes cloudDrift2 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-15px)} }
+        @keyframes cloudDrift3 { 0%,100%{transform:translateX(0)} 50%{transform:translateX(12px)} }
+        @keyframes cropBob     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes starTwink   { 0%,100%{opacity:0.4;transform:scale(0.85)} 50%{opacity:1;transform:scale(1.2)} }
+        @keyframes bflyFlap    { 0%,100%{transform:scaleX(1)} 50%{transform:scaleX(0.45)} }
+        @keyframes sunSpin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        .c1{animation:cloudDrift1 8s ease-in-out infinite}
+        .c2{animation:cloudDrift2 11s ease-in-out infinite}
+        .c3{animation:cloudDrift3 9s ease-in-out infinite}
+        .c4{animation:cloudDrift1 13s ease-in-out infinite 2s}
+        .b1{animation:cropBob 2.3s ease-in-out infinite}
+        .b2{animation:cropBob 2.8s ease-in-out infinite 0.5s}
+        .b3{animation:cropBob 3.2s ease-in-out infinite 1s}
+        .s1{animation:starTwink 1.9s ease-in-out infinite}
+        .s2{animation:starTwink 2.5s ease-in-out infinite 0.7s}
+        .s3{animation:starTwink 1.6s ease-in-out infinite 1.3s}
+        .s4{animation:starTwink 2.2s ease-in-out infinite 0.3s}
+        .bf{animation:bflyFlap 0.42s ease-in-out infinite}
 
-        /* ─── SCROLL BANNER HEADER ─── */
-        .scroll-header {
-            text-align: center;
-            margin-bottom: 22px;
-            position: relative;
-        }
+        .container { max-width: 1080px; width: 100%; position: relative; z-index: 1; }
 
+        /* ─── SCROLL BANNER ─── */
         .scroll-banner {
             display: inline-block;
             background: var(--parchment);
             border: 4px solid var(--wood-dark);
             border-radius: 4px;
-            padding: 14px 48px 10px;
+            padding: 14px 52px 14px;
             box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
             position: relative;
             margin-bottom: 6px;
+            text-align: center;
         }
-
-        .scroll-banner::before,
-        .scroll-banner::after {
+        .scroll-banner::before,.scroll-banner::after {
             content: '';
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute; top: 50%; transform: translateY(-50%);
             width: 28px; height: 44px;
-            background: var(--wood-mid);
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+            background: var(--wood-mid); border: 3px solid var(--wood-dark);
+            border-radius: 4px; box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
         }
-        .scroll-banner::before { left: -18px; }
-        .scroll-banner::after  { right: -18px; }
-
+        .scroll-banner::before{left:-18px}
+        .scroll-banner::after{right:-18px}
         .scroll-banner h1 {
             font-family: 'Press Start 2P', monospace;
-            font-size: 1.5em;
-            color: var(--wood-dark);
+            font-size: 1.5em; color: var(--wood-dark);
             text-shadow: 2px 2px 0 var(--parchment-darker);
-            letter-spacing: 0.02em;
-            line-height: 1.4;
+            letter-spacing: 0.02em; line-height: 1.4;
         }
-
         .mascot-wrap {
-            font-size: 52px;
-            display: block;
-            margin-bottom: 4px;
-            animation: float 2.5s ease-in-out infinite;
+            font-size: 52px; display: block; margin-bottom: 4px;
+            animation: floatAnim 2.5s ease-in-out infinite;
             filter: drop-shadow(3px 3px 0 rgba(0,0,0,0.3));
         }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-7px); }
-        }
-
-        .tagline {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.52em;
-            color: var(--wood-mid);
-            margin-top: 4px;
-            letter-spacing: 0.05em;
-        }
-
-        /* ─── PIXEL BADGE ─── */
+        @keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        .tagline { font-family: 'Press Start 2P', monospace; font-size: 0.52em; color: var(--wood-mid); margin-top: 4px; letter-spacing: 0.05em; }
         .pixel-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--gold);
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 5px 14px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.45em;
-            color: var(--wood-dark);
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
-            margin-bottom: 10px;
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--gold); border: 3px solid var(--wood-dark); border-radius: 4px;
+            padding: 5px 14px; font-family: 'Press Start 2P', monospace; font-size: 0.45em;
+            color: var(--wood-dark); box-shadow: 3px 3px 0 rgba(0,0,0,0.35); margin-bottom: 10px;
         }
 
-        /* ─── NAV TABS ─── */
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 22px;
-            flex-wrap: wrap;
-        }
-
+        /* ─── NAV ─── */
+        .nav-tabs { display: flex; justify-content: center; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; }
         .nav-tab {
-            background: var(--parchment-dark);
-            color: var(--wood-dark);
-            border: 4px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 10px 20px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.5em;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.15s;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
-            letter-spacing: 0.02em;
-            line-height: 1.5;
+            background: var(--parchment-dark); color: var(--wood-dark);
+            border: 4px solid var(--wood-dark); border-radius: 4px;
+            padding: 10px 20px; font-family: 'Press Start 2P', monospace;
+            font-size: 0.5em; cursor: pointer; transition: transform 0.1s, background 0.15s;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.35); letter-spacing: 0.02em; line-height: 1.5;
         }
-
-        .nav-tab:hover {
-            background: var(--orange-light);
-            transform: translate(-1px, -1px);
-            box-shadow: 5px 5px 0 rgba(0,0,0,0.35);
-        }
-
-        .nav-tab.active {
-            background: var(--gold);
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
-            transform: translate(2px, 2px);
-        }
-
-        .nav-tab:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 rgba(0,0,0,0.35); }
+        .nav-tab:hover { background: var(--orange-light); transform: translate(-1px,-1px); box-shadow: 5px 5px 0 rgba(0,0,0,0.35); }
+        .nav-tab.active { background: var(--gold); box-shadow: 2px 2px 0 rgba(0,0,0,0.35); transform: translate(2px,2px); }
+        .nav-tab:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 rgba(0,0,0,0.35); }
 
         /* ─── PAGES ─── */
         .page { display: none; }
-        .page.active {
-            display: block;
-            animation: pageIn 0.25s ease both;
-        }
+        .page.active { display: block; animation: pageIn 0.25s ease both; }
+        @keyframes pageIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-        @keyframes pageIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ─── GRID ─── */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        /* ─── CARD ─── */
+        /* ─── GRID & CARDS ─── */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 14px; }
         .card {
-            background: var(--parchment);
-            border: 5px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 18px;
-            box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
-            position: relative;
-            transition: transform 0.12s, box-shadow 0.12s;
+            background: var(--parchment); border: 5px solid var(--wood-dark); border-radius: 4px;
+            padding: 18px; box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
+            position: relative; transition: transform 0.12s, box-shadow 0.12s;
             animation: cardIn 0.35s ease both;
         }
+        @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .card:nth-child(1){animation-delay:0.04s}.card:nth-child(2){animation-delay:0.08s}
+        .card:nth-child(3){animation-delay:0.12s}.card:nth-child(4){animation-delay:0.16s}
+        .card:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 rgba(0,0,0,0.4); }
 
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .card:nth-child(1) { animation-delay: 0.04s; }
-        .card:nth-child(2) { animation-delay: 0.08s; }
-        .card:nth-child(3) { animation-delay: 0.12s; }
-        .card:nth-child(4) { animation-delay: 0.16s; }
-
-        .card:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 7px 7px 0 rgba(0,0,0,0.4);
-        }
-
-        /* ─── SECTION TITLE BANNER ─── */
         .section-title {
-            background: var(--wood-mid);
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 7px 14px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.58em;
-            color: var(--gold-light);
-            text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
-            letter-spacing: 0.04em;
+            background: var(--wood-mid); border: 3px solid var(--wood-dark); border-radius: 4px;
+            padding: 7px 14px; font-family: 'Press Start 2P', monospace; font-size: 0.58em;
+            color: var(--gold-light); text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.35); letter-spacing: 0.04em;
         }
 
-        /* ─── STAT ROWS ─── */
+        /* ─── STATS ─── */
         .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 2px dashed var(--parchment-darker);
-            font-size: 0.9em;
-            color: var(--wood-dark);
-            font-weight: 700;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 2px dashed var(--parchment-darker);
+            font-size: 0.9em; color: var(--wood-dark); font-weight: 700;
         }
-
         .stat-item:last-of-type { border-bottom: none; }
-
-        .stat-value {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.75em;
-            color: var(--orange-warm);
-            display: inline-block;
-        }
-
+        .stat-value { font-family: 'Press Start 2P', monospace; font-size: 0.75em; color: var(--orange-warm); display: inline-block; }
         .stat-value.pop { animation: statPop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes statPop { 0%{transform:scale(1)} 45%{transform:scale(1.4);color:var(--gold)} 100%{transform:scale(1)} }
 
-        @keyframes statPop {
-            0%   { transform: scale(1); }
-            45%  { transform: scale(1.4); color: var(--gold); }
-            100% { transform: scale(1); }
-        }
+        .xp-label { display: flex; justify-content: space-between; font-family: 'Press Start 2P', monospace; font-size: 0.45em; color: var(--wood-mid); margin: 10px 0 5px; }
+        .xp-bar { width: 100%; height: 18px; background: var(--parchment-darker); border: 3px solid var(--wood-dark); border-radius: 3px; overflow: hidden; box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
+        .xp-fill { height: 100%; background: linear-gradient(90deg, var(--green-light) 0%, var(--gold) 100%); transition: width 0.7s cubic-bezier(.4,0,.2,1); position: relative; }
+        .xp-fill::after { content: ''; position: absolute; top: 3px; right: 4px; width: 5px; height: 5px; background: white; opacity: 0.7; }
 
-        /* ─── XP BAR ─── */
-        .xp-label {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.45em;
-            color: var(--wood-mid);
-            margin: 10px 0 5px;
-        }
-
-        .xp-bar {
-            width: 100%;
-            height: 18px;
-            background: var(--parchment-darker);
-            border: 3px solid var(--wood-dark);
-            border-radius: 3px;
-            overflow: hidden;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
-        }
-
-        .xp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--green-light) 0%, var(--gold) 100%);
-            transition: width 0.7s cubic-bezier(.4,0,.2,1);
-            position: relative;
-        }
-
-        .xp-fill::after {
-            content: '';
-            position: absolute;
-            top: 3px; right: 4px;
-            width: 5px; height: 5px;
-            background: white;
-            opacity: 0.7;
-        }
-
-        /* ─── MODE BADGE ─── */
-        .mode-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.48em;
-            margin-bottom: 12px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-            letter-spacing: 0.03em;
-        }
-
+        .mode-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 3px solid var(--wood-dark); border-radius: 4px; font-family: 'Press Start 2P', monospace; font-size: 0.48em; margin-bottom: 12px; box-shadow: 3px 3px 0 rgba(0,0,0,0.3); letter-spacing: 0.03em; }
         .mode-badge.default { background: var(--blue-light); color: var(--wood-dark); }
-        .mode-badge.focus   { background: var(--red-light);  color: white; }
-
-        .mode-badge .dot {
-            width: 8px; height: 8px;
-            border: 2px solid rgba(0,0,0,0.3);
-        }
+        .mode-badge.focus   { background: var(--red-light); color: white; }
+        .mode-badge .dot { width: 8px; height: 8px; border: 2px solid rgba(0,0,0,0.3); }
         .mode-badge.default .dot { background: var(--blue-sky); }
-        .mode-badge.focus   .dot { background: var(--red-berry); animation: blink 0.8s infinite; }
+        .mode-badge.focus   .dot { background: var(--red-berry); animation: blinkAnim 0.8s infinite; }
+        @keyframes blinkAnim { 0%,100%{opacity:1} 50%{opacity:0.1} }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.1; }
-        }
-
-        /* ─── PIXEL BUTTONS ─── */
+        /* ─── BUTTONS ─── */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border: 4px solid var(--wood-dark);
-            border-radius: 4px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.46em;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-            width: 100%;
-            letter-spacing: 0.03em;
-            line-height: 1.6;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 18px; border: 4px solid var(--wood-dark); border-radius: 4px;
+            font-family: 'Press Start 2P', monospace; font-size: 0.46em; cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s; width: 100%;
+            letter-spacing: 0.03em; line-height: 1.6; box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
         }
+        .btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(0,0,0,0.35)}
+        .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 rgba(0,0,0,0.25)}
+        .btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:2px 2px 0 rgba(0,0,0,0.2)}
+        .btn-primary{background:var(--green-field);color:white}
+        .btn-primary:hover:not(:disabled){background:var(--green-light)}
+        .btn-danger{background:var(--red-berry);color:white}
+        .btn-danger:hover:not(:disabled){background:var(--red-light)}
+        .btn-outline{background:var(--parchment-dark);color:var(--wood-dark)}
+        .btn-outline:hover{background:var(--orange-light)}
 
-        .btn:hover {
-            transform: translate(-1px, -1px);
-            box-shadow: 5px 5px 0 rgba(0,0,0,0.35);
-        }
-
-        .btn:active {
-            transform: translate(3px, 3px);
-            box-shadow: 1px 1px 0 rgba(0,0,0,0.25);
-        }
-
-        .btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-        }
-
-        .btn-primary { background: var(--green-field); color: white; }
-        .btn-primary:hover:not(:disabled) { background: var(--green-light); }
-
-        .btn-danger { background: var(--red-berry); color: white; }
-        .btn-danger:hover:not(:disabled) { background: var(--red-light); }
-
-        .btn-outline { background: var(--parchment-dark); color: var(--wood-dark); }
-        .btn-outline:hover { background: var(--orange-light); }
-
-        .btn-gold { background: var(--gold); color: var(--wood-dark); }
-        .btn-gold:hover:not(:disabled) { background: var(--gold-light); }
-
-        /* ─── MODE DESC ─── */
-        .mode-desc {
-            background: rgba(0,0,0,0.06);
-            border: 2px dashed var(--parchment-darker);
-            border-radius: 4px;
-            padding: 10px 12px;
-            font-size: 0.82em;
-            color: var(--wood-mid);
-            line-height: 1.65;
-            margin-top: 12px;
-            font-weight: 600;
-        }
-
+        .mode-desc { background: rgba(0,0,0,0.06); border: 2px dashed var(--parchment-darker); border-radius: 4px; padding: 10px 12px; font-size: 0.82em; color: var(--wood-mid); line-height: 1.65; margin-top: 12px; font-weight: 600; }
         .mode-desc strong { color: var(--wood-dark); font-weight: 800; }
 
-        /* ─── OVERLAY PILL ─── */
-        .overlay-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.47em;
-            margin-bottom: 12px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-        }
-
+        .overlay-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 3px solid var(--wood-dark); border-radius: 4px; font-family: 'Press Start 2P', monospace; font-size: 0.47em; margin-bottom: 12px; box-shadow: 3px 3px 0 rgba(0,0,0,0.3); }
         .overlay-pill.on  { background: var(--green-pale); color: var(--green-field); }
         .overlay-pill.off { background: #f8d0d0; color: var(--red-berry); }
 
         /* ─── SHOP ─── */
-        .shop-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            border: 3px solid var(--parchment-darker);
-            border-radius: 4px;
-            background: var(--cream);
-            margin-bottom: 10px;
-            transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
-        }
-
-        .shop-item:hover {
-            border-color: var(--wood-mid);
-            transform: translateX(4px);
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
-        }
-
-        .item-emoji {
-            width: 44px; height: 44px;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            background: var(--parchment-dark);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
-        }
-
+        .shop-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 3px solid var(--parchment-darker); border-radius: 4px; background: var(--cream); margin-bottom: 10px; transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s; box-shadow: 3px 3px 0 rgba(0,0,0,0.15); }
+        .shop-item:hover { border-color: var(--wood-mid); transform: translateX(4px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+        .item-emoji { width: 44px; height: 44px; border: 3px solid var(--wood-dark); border-radius: 4px; background: var(--parchment-dark); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: 2px 2px 0 rgba(0,0,0,0.25); }
         .item-info { flex: 1; }
-
-        .item-name {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.52em;
-            color: var(--wood-dark);
-            margin-bottom: 4px;
-            letter-spacing: 0.02em;
-        }
-
-        .item-price {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--gold);
-            color: var(--wood-dark);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.42em;
-            padding: 3px 9px;
-            border: 2px solid var(--wood-dark);
-            border-radius: 3px;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-        }
-
-        .shop-btn {
-            background: var(--green-field);
-            color: white;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 8px 16px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.44em;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
-            flex-shrink: 0;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-            letter-spacing: 0.02em;
-        }
-
-        .shop-btn:hover:not(:disabled) {
-            background: var(--green-light);
-            transform: translate(-1px, -1px);
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
-        }
-
-        .shop-btn:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(0,0,0,0.2); }
-
-        .shop-btn:disabled {
-            background: var(--parchment-darker);
-            color: var(--wood-mid);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
-        }
+        .item-name { font-family: 'Press Start 2P', monospace; font-size: 0.52em; color: var(--wood-dark); margin-bottom: 4px; letter-spacing: 0.02em; }
+        .item-price { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: var(--wood-dark); font-family: 'Press Start 2P', monospace; font-size: 0.42em; padding: 3px 9px; border: 2px solid var(--wood-dark); border-radius: 3px; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); }
+        .shop-btn { background: var(--green-field); color: white; border: 3px solid var(--wood-dark); border-radius: 4px; padding: 8px 16px; font-family: 'Press Start 2P', monospace; font-size: 0.44em; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s, background 0.1s; flex-shrink: 0; box-shadow: 3px 3px 0 rgba(0,0,0,0.3); letter-spacing: 0.02em; }
+        .shop-btn:hover:not(:disabled){background:var(--green-light);transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(0,0,0,0.3)}
+        .shop-btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,0.2)}
+        .shop-btn:disabled{background:var(--parchment-darker);color:var(--wood-mid);cursor:not-allowed;transform:none;box-shadow:2px 2px 0 rgba(0,0,0,0.15)}
 
         /* ─── WEBCAM ─── */
-        .webcam-placeholder {
-            width: 100%;
-            height: 210px;
-            background: #1a1a2e;
-            border: 4px solid var(--wood-dark);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #7a8fa8;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.46em;
-            gap: 12px;
-            margin: 12px 0;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 3px 3px 0 rgba(0,0,0,0.3);
-            letter-spacing: 0.04em;
-        }
-
-        .webcam-icon-wrap {
-            width: 64px; height: 64px;
-            border: 3px solid #3a4a6a;
-            border-radius: 4px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
-            background: #0f1528;
-        }
-
+        .webcam-placeholder { width: 100%; height: 210px; background: #1a1a2e; border: 4px solid var(--wood-dark); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7a8fa8; font-family: 'Press Start 2P', monospace; font-size: 0.46em; gap: 12px; margin: 12px 0; box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 3px 3px 0 rgba(0,0,0,0.3); letter-spacing: 0.04em; }
+        .webcam-icon-wrap { width: 64px; height: 64px; border: 3px solid #3a4a6a; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #0f1528; }
         .webcam-inactive-label { color: #9098c8; font-size: 1.1em; }
-        .webcam-inactive-sub { color: #3a3a5a; font-size: 0.8em; }
-
-        .webcam-live-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 10px 0 5px;
-            padding: 8px 12px;
-            background: #2a0808;
-            border: 3px solid var(--red-berry);
-            border-radius: 4px;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
-        }
-
-        .live-dot {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.44em;
-            color: #f08090;
-        }
-
-        .live-dot::before {
-            content: '';
-            width: 8px; height: 8px;
-            background: var(--red-light);
-            animation: blink 0.8s infinite;
-        }
-
-        .streak-chip {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.44em;
-            color: var(--gold);
-        }
-
+        .webcam-inactive-sub   { color: #3a3a5a; font-size: 0.8em; }
+        .webcam-live-bar { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px; padding: 8px 12px; background: #2a0808; border: 3px solid var(--red-berry); border-radius: 4px; box-shadow: 2px 2px 0 rgba(0,0,0,0.3); }
+        .live-dot { display: inline-flex; align-items: center; gap: 6px; font-family: 'Press Start 2P', monospace; font-size: 0.44em; color: #f08090; }
+        .live-dot::before { content: ''; width: 8px; height: 8px; background: var(--red-light); animation: blinkAnim 0.8s infinite; }
+        .streak-chip { font-family: 'Press Start 2P', monospace; font-size: 0.44em; color: var(--gold); }
         .webcam-controls { display: flex; gap: 10px; margin-top: 10px; }
         .webcam-controls .btn { font-size: 0.44em; padding: 10px 14px; }
-
-        .focus-stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin: 14px 0 4px;
-        }
-
-        .focus-stat-chip {
-            background: var(--cream);
-            border: 3px solid var(--parchment-darker);
-            border-radius: 4px;
-            padding: 12px 8px;
-            text-align: center;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
-            transition: transform 0.12s;
-        }
-
+        .focus-stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0 4px; }
+        .focus-stat-chip { background: var(--cream); border: 3px solid var(--parchment-darker); border-radius: 4px; padding: 12px 8px; text-align: center; box-shadow: 2px 2px 0 rgba(0,0,0,0.15); transition: transform 0.12s; }
         .focus-stat-chip:hover { transform: scale(1.04); border-color: var(--wood-mid); }
-
-        .focus-stat-chip .fsc-val {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.75em;
-            color: var(--orange-warm);
-            display: block;
-        }
-
-        .focus-stat-chip .fsc-lbl {
-            font-size: 0.72em;
-            font-weight: 700;
-            color: var(--wood-mid);
-            display: block;
-            margin-top: 4px;
-        }
-
-        .focus-alert {
-            background: #4a0808;
-            color: #f08090;
-            border: 4px solid var(--red-light);
-            border-radius: 4px;
-            padding: 14px 18px;
-            text-align: center;
-            margin-top: 12px;
-            animation: alertPulse 0.7s ease-in-out infinite;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.5em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
-            letter-spacing: 0.04em;
-            line-height: 1.7;
-        }
-
-        @keyframes alertPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); border-color: white; }
-        }
+        .focus-stat-chip .fsc-val { font-family: 'Press Start 2P', monospace; font-size: 0.75em; color: var(--orange-warm); display: block; }
+        .focus-stat-chip .fsc-lbl { font-size: 0.72em; font-weight: 700; color: var(--wood-mid); display: block; margin-top: 4px; }
+        .focus-alert { background: #4a0808; color: #f08090; border: 4px solid var(--red-light); border-radius: 4px; padding: 14px 18px; text-align: center; margin-top: 12px; animation: alertPulse 0.7s ease-in-out infinite; font-family: 'Press Start 2P', monospace; font-size: 0.5em; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); letter-spacing: 0.04em; line-height: 1.7; }
+        @keyframes alertPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02);border-color:white} }
 
         /* ─── LEARNING ─── */
-        .learning-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 14px;
-            border: 3px solid var(--parchment-darker);
-            border-radius: 4px;
-            margin-bottom: 10px;
-            background: var(--cream);
-            transition: transform 0.12s, border-color 0.15s;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
-        }
-
-        .learning-item:hover {
-            transform: translateX(4px);
-            border-color: var(--orange-warm);
-        }
-
-        .learning-item.top {
-            background: #e8f8d0;
-            border-color: var(--green-field);
-        }
-
-        .topic-name {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.5em;
-            color: var(--wood-dark);
-            margin-bottom: 4px;
-            letter-spacing: 0.02em;
-            line-height: 1.6;
-        }
-
+        .learning-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 3px solid var(--parchment-darker); border-radius: 4px; margin-bottom: 10px; background: var(--cream); transition: transform 0.12s, border-color 0.15s; box-shadow: 3px 3px 0 rgba(0,0,0,0.15); }
+        .learning-item:hover { transform: translateX(4px); border-color: var(--orange-warm); }
+        .learning-item.top { background: #e8f8d0; border-color: var(--green-field); }
+        .topic-name { font-family: 'Press Start 2P', monospace; font-size: 0.5em; color: var(--wood-dark); margin-bottom: 4px; letter-spacing: 0.02em; line-height: 1.6; }
         .learning-item.top .topic-name { color: var(--green-field); }
-
         .topic-count { font-size: 0.78em; font-weight: 700; color: var(--wood-mid); }
-
-        .rank-badge {
-            width: 32px; height: 32px;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            background: var(--gold);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.44em;
-            color: var(--wood-dark);
-            flex-shrink: 0;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
-        }
-
+        .rank-badge { width: 32px; height: 32px; border: 3px solid var(--wood-dark); border-radius: 4px; background: var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P', monospace; font-size: 0.44em; color: var(--wood-dark); flex-shrink: 0; box-shadow: 2px 2px 0 rgba(0,0,0,0.25); }
         .rank-badge.regular { background: var(--parchment-dark); }
-
-        .tips-box {
-            margin-top: 18px;
-            background: #fff8e8;
-            border: 3px solid var(--gold);
-            border-radius: 4px;
-            padding: 16px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
-        }
-
-        .tips-box h4 {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.52em;
-            color: var(--wood-dark);
-            margin-bottom: 10px;
-            letter-spacing: 0.03em;
-        }
-
+        .tips-box { margin-top: 18px; background: #fff8e8; border: 3px solid var(--gold); border-radius: 4px; padding: 16px; box-shadow: 3px 3px 0 rgba(0,0,0,0.2); }
+        .tips-box h4 { font-family: 'Press Start 2P', monospace; font-size: 0.52em; color: var(--wood-dark); margin-bottom: 10px; letter-spacing: 0.03em; }
         .tips-box ul { list-style: none; font-size: 0.86em; color: var(--wood-mid); line-height: 1.8; font-weight: 700; }
         .tips-box ul li::before { content: '🌾 '; }
 
-        /* ─── EMPTY STATE ─── */
-        .empty-state {
-            text-align: center;
-            padding: 36px 18px;
-            color: var(--wood-mid);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.45em;
-            line-height: 2;
-            letter-spacing: 0.03em;
-        }
-
+        /* ─── MISC ─── */
+        .empty-state { text-align: center; padding: 36px 18px; color: var(--wood-mid); font-family: 'Press Start 2P', monospace; font-size: 0.45em; line-height: 2; letter-spacing: 0.03em; }
         .empty-state .empty-icon { font-size: 3.5em; margin-bottom: 12px; }
+        .notification { position: fixed; top: 20px; right: 20px; background: var(--parchment); border: 4px solid var(--wood-dark); border-radius: 4px; padding: 12px 18px; z-index: 1000; font-family: 'Press Start 2P', monospace; font-size: 0.48em; color: var(--wood-dark); box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker); max-width: 300px; letter-spacing: 0.02em; line-height: 1.7; opacity: 0; transform: translateX(330px); transition: opacity 0.25s, transform 0.3s cubic-bezier(0.34,1.45,0.64,1); display: none; }
+        .notification.show { display: flex; align-items: center; gap: 8px; opacity: 1; transform: translateX(0); }
+        .notification.hiding { opacity: 0; transform: translateX(330px); }
+        .pixel-divider { height: 4px; background: repeating-linear-gradient(90deg, var(--parchment-darker) 0,var(--parchment-darker) 8px, transparent 8px, transparent 12px); margin: 12px 0; border-radius: 2px; }
+        #webcam-canvas { display: none; width: 100%; border: 4px solid var(--wood-dark); border-radius: 4px; box-shadow: 3px 3px 0 rgba(0,0,0,0.3); }
+        .card-icon { width: 42px; height: 42px; border: 3px solid var(--wood-dark); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; box-shadow: 2px 2px 0 rgba(0,0,0,0.25); }
+        .card-icon.purple{background:#d8c8f8}.card-icon.pink{background:#f8c8d8}.card-icon.amber{background:#f8e4a8}.card-icon.teal{background:#c0f0e8}
 
-        /* ─── NOTIFICATION ─── */
-        .notification {
-            position: fixed;
-            top: 20px; right: 20px;
-            background: var(--parchment);
-            border: 4px solid var(--wood-dark);
-            border-radius: 4px;
-            padding: 12px 18px;
-            z-index: 1000;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.48em;
-            color: var(--wood-dark);
-            box-shadow: 5px 5px 0 rgba(0,0,0,0.4), inset 0 0 0 2px var(--parchment-darker);
-            max-width: 300px;
-            letter-spacing: 0.02em;
-            line-height: 1.7;
-            opacity: 0;
-            transform: translateX(330px);
-            transition: opacity 0.25s, transform 0.3s cubic-bezier(0.34,1.45,0.64,1);
-            display: none;
-        }
-
-        .notification.show {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .notification.hiding {
-            opacity: 0;
-            transform: translateX(330px);
-        }
-
-        /* ─── PIXEL DIVIDER ─── */
-        .pixel-divider {
-            height: 4px;
-            background: repeating-linear-gradient(
-                90deg,
-                var(--parchment-darker) 0px,
-                var(--parchment-darker) 8px,
-                transparent 8px,
-                transparent 12px
-            );
-            margin: 12px 0;
-            border-radius: 2px;
-        }
-
-        /* ─── CANVAS ─── */
-        #webcam-canvas {
-            display: none;
-            width: 100%;
-            border: 4px solid var(--wood-dark);
-            border-radius: 4px;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-        }
-
-        /* ─── CARD ICON ─── */
-        .card-icon {
-            width: 42px; height: 42px;
-            border: 3px solid var(--wood-dark);
-            border-radius: 4px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
-            margin-bottom: 12px;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
-        }
-
-        .card-icon.purple { background: #d8c8f8; }
-        .card-icon.pink   { background: #f8c8d8; }
-        .card-icon.amber  { background: #f8e4a8; }
-        .card-icon.teal   { background: #c0f0e8; }
-
-        /* ─── STAR DECORATIONS ─── */
-        .star-deco {
-            position: absolute;
-            font-size: 14px;
-            opacity: 0.5;
-            animation: twinkle 2s ease-in-out infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; transform: scale(0.8); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
+        @media (max-width: 680px) {
             .scroll-banner h1 { font-size: 1em; }
             .nav-tab { font-size: 0.42em; padding: 8px 14px; }
+            .deco-left, .deco-right { display: none; }
         }
     </style>
 </head>
 <body>
+
+<!-- ══ BACKGROUND SCENE ══ -->
+<div class="bg-scene"></div>
+
+<!-- TOP: sky, clouds, sun, birds, stars -->
+<svg class="deco-svg deco-top" viewBox="0 0 1440 230" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- Stars -->
+    <g class="s1"><rect x="55"   y="16" width="6" height="6" fill="white"/><rect x="52"   y="19" width="12" height="2" fill="white"/></g>
+    <g class="s2"><rect x="290"  y="9"  width="6" height="6" fill="white" opacity=".85"/><rect x="287"  y="12" width="12" height="2" fill="white" opacity=".85"/></g>
+    <g class="s3"><rect x="880"  y="20" width="5" height="5" fill="white" opacity=".75"/><rect x="877"  y="22" width="11" height="2" fill="white" opacity=".75"/></g>
+    <g class="s4"><rect x="1370" y="14" width="6" height="6" fill="white"/><rect x="1367" y="17" width="12" height="2" fill="white"/></g>
+    <g class="s1"><rect x="700"  y="7"  width="4" height="4" fill="white" opacity=".6"/><rect x="698"   y="9"  width="8"  height="2" fill="white" opacity=".6"/></g>
+    <g class="s3"><rect x="1100" y="28" width="5" height="5" fill="white" opacity=".7"/><rect x="1097"  y="30" width="11" height="2" fill="white" opacity=".7"/></g>
+
+    <!-- SUN (top right) -->
+    <g transform="translate(1330,8)">
+        <!-- Rays -->
+        <rect x="26" y="-8"  width="8" height="10" fill="#f8d840" rx="1"/>
+        <rect x="26" y="60"  width="8" height="10" fill="#f8d840" rx="1"/>
+        <rect x="-8" y="26"  width="10" height="8" fill="#f8d840" rx="1"/>
+        <rect x="60" y="26"  width="10" height="8" fill="#f8d840" rx="1"/>
+        <rect x="2"  y="2"   width="10" height="10" fill="#f8d840" rx="1" transform="rotate(45 7 7)"/>
+        <rect x="50" y="2"   width="10" height="10" fill="#f8d840" rx="1" transform="rotate(45 55 7)"/>
+        <rect x="2"  y="50"  width="10" height="10" fill="#f8d840" rx="1" transform="rotate(45 7 55)"/>
+        <rect x="50" y="50"  width="10" height="10" fill="#f8d840" rx="1" transform="rotate(45 55 55)"/>
+        <!-- Body -->
+        <rect x="12" y="12" width="36" height="36" fill="#f8d840" rx="3"/>
+        <rect x="18" y="18" width="24" height="24" fill="#fff5a0" rx="2"/>
+    </g>
+
+    <!-- Cloud 1 -->
+    <g class="c1" transform="translate(40,42)">
+        <rect x="20" y="28" width="72" height="18" fill="white" opacity=".95" rx="2"/>
+        <rect x="8"  y="16" width="92" height="28" fill="white" opacity=".95" rx="2"/>
+        <rect x="0"  y="8"  width="108" height="36" fill="white" opacity=".95" rx="2"/>
+        <rect x="10" y="0"  width="52" height="18" fill="white" opacity=".95" rx="2"/>
+        <rect x="52" y="4"  width="36" height="22" fill="white" opacity=".95" rx="2"/>
+        <rect x="0"  y="40" width="108" height="4" fill="#c8e0ee" opacity=".45"/>
+    </g>
+    <!-- Cloud 2 -->
+    <g class="c2" transform="translate(360,20)">
+        <rect x="28" y="32" width="88" height="18" fill="white" opacity=".9" rx="2"/>
+        <rect x="10" y="18" width="120" height="30" fill="white" opacity=".9" rx="2"/>
+        <rect x="0"  y="8"  width="140" height="40" fill="white" opacity=".9" rx="2"/>
+        <rect x="18" y="0"  width="60" height="18" fill="white" opacity=".9" rx="2"/>
+        <rect x="70" y="4"  width="50" height="24" fill="white" opacity=".9" rx="2"/>
+        <rect x="0"  y="44" width="140" height="4" fill="#c8e0ee" opacity=".4"/>
+    </g>
+    <!-- Cloud 3 -->
+    <g class="c3" transform="translate(780,50)">
+        <rect x="18" y="22" width="64" height="16" fill="white" opacity=".87" rx="2"/>
+        <rect x="6"  y="12" width="88" height="26" fill="white" opacity=".87" rx="2"/>
+        <rect x="0"  y="4"  width="100" height="34" fill="white" opacity=".87" rx="2"/>
+        <rect x="14" y="0"  width="44" height="14" fill="white" opacity=".87" rx="2"/>
+        <rect x="48" y="2"  width="38" height="18" fill="white" opacity=".87" rx="2"/>
+    </g>
+    <!-- Cloud 4 -->
+    <g class="c4" transform="translate(1200,32)">
+        <rect x="18" y="26" width="76" height="18" fill="white" opacity=".92" rx="2"/>
+        <rect x="6"  y="14" width="100" height="28" fill="white" opacity=".92" rx="2"/>
+        <rect x="0"  y="6"  width="114" height="38" fill="white" opacity=".92" rx="2"/>
+        <rect x="14" y="0"  width="56" height="16" fill="white" opacity=".92" rx="2"/>
+        <rect x="58" y="3"  width="40" height="20" fill="white" opacity=".92" rx="2"/>
+        <rect x="0"  y="40" width="114" height="4" fill="#c8e0ee" opacity=".4"/>
+    </g>
+
+    <!-- Birds -->
+    <g transform="translate(195,60)" fill="#2a2a4a">
+        <rect x="0" y="4" width="9" height="5" rx="1"/><rect x="9" y="0" width="5" height="5" rx="1"/><rect x="14" y="4" width="9" height="5" rx="1"/>
+    </g>
+    <g transform="translate(240,48)" fill="#2a2a4a">
+        <rect x="0" y="3" width="7" height="4" rx="1"/><rect x="7" y="0" width="4" height="4" rx="1"/><rect x="11" y="3" width="7" height="4" rx="1"/>
+    </g>
+    <g transform="translate(620,35)" fill="#2a2a4a">
+        <rect x="0" y="4" width="9" height="5" rx="1"/><rect x="9" y="0" width="5" height="5" rx="1"/><rect x="14" y="4" width="9" height="5" rx="1"/>
+    </g>
+    <g transform="translate(660,44)" fill="#2a2a4a">
+        <rect x="0" y="3" width="7" height="4" rx="1"/><rect x="7" y="0" width="4" height="4" rx="1"/><rect x="11" y="3" width="7" height="4" rx="1"/>
+    </g>
+</svg>
+
+<!-- LEFT SIDE -->
+<svg class="deco-svg deco-left" viewBox="0 0 165 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ground fill -->
+    <rect x="0" y="490" width="165" height="410" fill="#3d6426"/>
+    <!-- Fence -->
+    <rect x="0" y="478" width="148" height="7" fill="#5c3a1e"/>
+    <rect x="0" y="514" width="148" height="7" fill="#5c3a1e"/>
+    <g fill="#7a4e2d">
+        <rect x="4"   y="464" width="16" height="70" rx="2"/>
+        <rect x="36"  y="464" width="16" height="70" rx="2"/>
+        <rect x="68"  y="464" width="16" height="70" rx="2"/>
+        <rect x="100" y="464" width="16" height="70" rx="2"/>
+        <rect x="132" y="464" width="16" height="70" rx="2"/>
+    </g>
+    <g fill="#a06030">
+        <polygon points="4,464  12,452 20,464"/>
+        <polygon points="36,464 44,452 52,464"/>
+        <polygon points="68,464 76,452 84,464"/>
+        <polygon points="100,464 108,452 116,464"/>
+        <polygon points="132,464 140,452 148,464"/>
+    </g>
+    <!-- Ground dots -->
+    <g fill="#2e5020" opacity=".5">
+        <rect x="10" y="500" width="8" height="5"/><rect x="30" y="518" width="6" height="5"/>
+        <rect x="58" y="505" width="8" height="5"/><rect x="82" y="524" width="6" height="5"/>
+        <rect x="110" y="510" width="8" height="5"/><rect x="138" y="526" width="6" height="5"/>
+    </g>
+
+    <!-- BIG TREE -->
+    <g transform="translate(62,130)">
+        <rect x="14" y="88" width="20" height="72" fill="#7a4e2d"/>
+        <rect x="10" y="18" width="10" height="26" fill="#7a4e2d"/><!-- branch -->
+        <rect x="4"  y="52" width="58" height="44" fill="#4a7a2e"/>
+        <rect x="8"  y="28" width="50" height="36" fill="#5a8a3c"/>
+        <rect x="14" y="10" width="34" height="28" fill="#7ec850"/>
+        <rect x="20" y="0"  width="22" height="18" fill="#7ec850"/>
+        <!-- Fruit -->
+        <rect x="10" y="56" width="8" height="8" fill="#e85050" rx="2"/>
+        <rect x="34" y="54" width="8" height="8" fill="#f8d840" rx="2"/>
+        <rect x="52" y="60" width="8" height="8" fill="#e85050" rx="2"/>
+        <rect x="22" y="38" width="8" height="8" fill="#e85050" rx="2"/>
+    </g>
+
+    <!-- SUNFLOWER 1 -->
+    <g class="b1" transform="translate(6,330)">
+        <rect x="7" y="32" width="7" height="105" fill="#5a8a3c"/>
+        <rect x="0" y="65" width="9" height="8"  fill="#7ec850" rx="2"/>
+        <rect x="14" y="85" width="9" height="8" fill="#7ec850" rx="2"/>
+        <!-- Petals -->
+        <rect x="0"  y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="8"  y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="0"  y="8"  width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="8"  width="8" height="8" fill="#f8d840"/>
+        <rect x="0"  y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="8"  y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="8" y="8" width="8" height="8" fill="#5c3a1e"/>
+    </g>
+
+    <!-- SUNFLOWER 2 shorter -->
+    <g class="b2" transform="translate(38,368)">
+        <rect x="5" y="24" width="6" height="84" fill="#5a8a3c"/>
+        <rect x="-2" y="55" width="9" height="7" fill="#7ec850" rx="2"/>
+        <rect x="13" y="70" width="9" height="7" fill="#7ec850" rx="2"/>
+        <rect x="1"  y="0"  width="7" height="7" fill="#e85050"/>
+        <rect x="8"  y="0"  width="7" height="7" fill="#e85050"/>
+        <rect x="1"  y="14" width="7" height="7" fill="#e85050"/>
+        <rect x="8"  y="14" width="7" height="7" fill="#e85050"/>
+        <rect x="-1" y="7"  width="7" height="7" fill="#e85050"/>
+        <rect x="15" y="7"  width="7" height="7" fill="#e85050"/>
+        <rect x="4"  y="7" width="10" height="7" fill="#c03030"/>
+    </g>
+
+    <!-- BUSH with berries -->
+    <g transform="translate(0,534)">
+        <rect x="0"  y="28" width="62" height="26" fill="#4a7a2e"/>
+        <rect x="8"  y="14" width="46" height="28" fill="#5a8a3c"/>
+        <rect x="16" y="4"  width="30" height="20" fill="#7ec850"/>
+        <rect x="24" y="0"  width="14" height="10" fill="#7ec850"/>
+        <rect x="9"  y="18" width="7" height="7" fill="#e85050" rx="1"/>
+        <rect x="28" y="12" width="7" height="7" fill="#e85050" rx="1"/>
+        <rect x="46" y="20" width="7" height="7" fill="#e85050" rx="1"/>
+        <rect x="18" y="24" width="5" height="5" fill="#f8d840" rx="1"/>
+        <rect x="22" y="52" width="18" height="12" fill="#5c3a1e"/>
+    </g>
+
+    <!-- MUSHROOM -->
+    <g transform="translate(92,548)">
+        <rect x="6"  y="22" width="9"  height="16" fill="#f5e6c8"/>
+        <rect x="4"  y="17" width="13" height="7"  fill="#f5e6c8"/>
+        <rect x="0"  y="4"  width="21" height="17" fill="#c03030" rx="2"/>
+        <rect x="4"  y="0"  width="13" height="8"  fill="#c03030" rx="2"/>
+        <rect x="5"  y="6"  width="5"  height="5"  fill="white" opacity=".8"/>
+        <rect x="12" y="11" width="4"  height="4"  fill="white" opacity=".8"/>
+    </g>
+
+    <!-- BUTTERFLY -->
+    <g transform="translate(115,300)">
+        <g class="bf">
+            <rect x="0"  y="7" width="14" height="11" fill="#b098e8" rx="3" opacity=".9"/>
+            <rect x="18" y="7" width="14" height="11" fill="#b098e8" rx="3" opacity=".9"/>
+            <rect x="2"  y="2" width="11" height="15" fill="#8868c8" rx="3" opacity=".7"/>
+            <rect x="19" y="2" width="11" height="15" fill="#8868c8" rx="3" opacity=".7"/>
+        </g>
+        <rect x="14" y="4" width="4" height="17" fill="#5c3a1e" rx="1"/>
+    </g>
+
+    <!-- WHEAT rows -->
+    <g transform="translate(0,636)" fill="#d4b87a">
+        <g><rect x="4"   y="0" width="5" height="62"/><rect x="2"   y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="18"  y="8" width="5" height="54"/><rect x="16"  y="8" width="9" height="9" rx="1"/></g>
+        <g><rect x="32"  y="2" width="5" height="60"/><rect x="30"  y="2" width="9" height="9" rx="1"/></g>
+        <g><rect x="46"  y="5" width="5" height="57"/><rect x="44"  y="5" width="9" height="9" rx="1"/></g>
+        <g><rect x="60"  y="0" width="5" height="62"/><rect x="58"  y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="74"  y="9" width="5" height="53"/><rect x="72"  y="9" width="9" height="9" rx="1"/></g>
+        <g><rect x="88"  y="3" width="5" height="59"/><rect x="86"  y="3" width="9" height="9" rx="1"/></g>
+        <g><rect x="102" y="6" width="5" height="56"/><rect x="100" y="6" width="9" height="9" rx="1"/></g>
+        <g><rect x="116" y="0" width="5" height="62"/><rect x="114" y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="130" y="4" width="5" height="58"/><rect x="128" y="4" width="9" height="9" rx="1"/></g>
+        <g><rect x="144" y="7" width="5" height="55"/><rect x="142" y="7" width="9" height="9" rx="1"/></g>
+    </g>
+
+    <!-- PUMPKIN -->
+    <g transform="translate(8,752)">
+        <rect x="13" y="0" width="5" height="10" fill="#5a8a3c"/>
+        <rect x="0"  y="10" width="13" height="26" fill="#c86820" rx="2"/>
+        <rect x="11" y="8"  width="13" height="30" fill="#f0a855" rx="2"/>
+        <rect x="22" y="10" width="13" height="26" fill="#c86820" rx="2"/>
+        <rect x="12" y="16" width="5"  height="5" fill="#5c3a1e"/>
+        <rect x="20" y="16" width="5"  height="5" fill="#5c3a1e"/>
+        <rect x="12" y="25" width="5"  height="4" fill="#5c3a1e"/>
+        <rect x="17" y="25" width="4"  height="2" fill="#5c3a1e"/>
+        <rect x="21" y="25" width="5"  height="4" fill="#5c3a1e"/>
+    </g>
+
+    <!-- WATERING CAN -->
+    <g transform="translate(68,758)">
+        <rect x="0"  y="11" width="42" height="30" fill="#4a80c8" rx="2"/>
+        <rect x="42" y="19" width="18" height="9"  fill="#4a80c8" rx="1"/>
+        <!-- spout holes -->
+        <rect x="58" y="15" width="4" height="4" fill="#80c0f0"/>
+        <rect x="64" y="15" width="4" height="4" fill="#80c0f0"/>
+        <rect x="70" y="15" width="4" height="4" fill="#80c0f0"/>
+        <!-- handle -->
+        <rect x="8"  y="0"  width="5"  height="15" fill="#2a5a98"/>
+        <rect x="28" y="0"  width="5"  height="15" fill="#2a5a98"/>
+        <rect x="8"  y="0"  width="25" height="5"  fill="#2a5a98"/>
+        <!-- drops -->
+        <rect x="58" y="23" width="4" height="7" fill="#80c0f0" opacity=".8"/>
+        <rect x="64" y="25" width="4" height="7" fill="#80c0f0" opacity=".8"/>
+        <rect x="70" y="23" width="4" height="7" fill="#80c0f0" opacity=".8"/>
+    </g>
+</svg>
+
+<!-- RIGHT SIDE -->
+<svg class="deco-svg deco-right" viewBox="0 0 165 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ground fill -->
+    <rect x="0" y="490" width="165" height="410" fill="#3d6426"/>
+    <!-- Fence (mirrored) -->
+    <rect x="17" y="478" width="148" height="7" fill="#5c3a1e"/>
+    <rect x="17" y="514" width="148" height="7" fill="#5c3a1e"/>
+    <g fill="#7a4e2d">
+        <rect x="13"  y="464" width="16" height="70" rx="2"/>
+        <rect x="45"  y="464" width="16" height="70" rx="2"/>
+        <rect x="77"  y="464" width="16" height="70" rx="2"/>
+        <rect x="109" y="464" width="16" height="70" rx="2"/>
+        <rect x="141" y="464" width="16" height="70" rx="2"/>
+    </g>
+    <g fill="#a06030">
+        <polygon points="13,464  21,452 29,464"/>
+        <polygon points="45,464  53,452 61,464"/>
+        <polygon points="77,464  85,452 93,464"/>
+        <polygon points="109,464 117,452 125,464"/>
+        <polygon points="141,464 149,452 157,464"/>
+    </g>
+    <g fill="#2e5020" opacity=".5">
+        <rect x="12" y="502" width="8" height="5"/><rect x="36" y="520" width="6" height="5"/>
+        <rect x="62" y="507" width="8" height="5"/><rect x="88" y="526" width="6" height="5"/>
+        <rect x="114" y="512" width="8" height="5"/><rect x="140" y="528" width="6" height="5"/>
+    </g>
+
+    <!-- BIG TREE right -->
+    <g transform="translate(14,118)">
+        <rect x="14" y="88" width="20" height="80" fill="#7a4e2d"/>
+        <rect x="36" y="52" width="10" height="28" fill="#7a4e2d"/>
+        <rect x="2"  y="50" width="62" height="46" fill="#4a7a2e"/>
+        <rect x="6"  y="28" width="52" height="38" fill="#5a8a3c"/>
+        <rect x="12" y="10" width="36" height="28" fill="#7ec850"/>
+        <rect x="18" y="0"  width="24" height="18" fill="#7ec850"/>
+        <rect x="8"  y="58" width="8" height="8" fill="#f8d840" rx="2"/>
+        <rect x="36" y="56" width="8" height="8" fill="#e85050" rx="2"/>
+        <rect x="52" y="62" width="8" height="8" fill="#f8d840" rx="2"/>
+    </g>
+
+    <!-- SUNFLOWER right -->
+    <g class="b3" transform="translate(102,332)">
+        <rect x="7" y="32" width="7" height="100" fill="#5a8a3c"/>
+        <rect x="0" y="65" width="9" height="8"  fill="#7ec850" rx="2"/>
+        <rect x="14" y="82" width="9" height="8" fill="#7ec850" rx="2"/>
+        <rect x="0"  y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="8"  y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="0"  width="8" height="8" fill="#f8d840"/>
+        <rect x="0"  y="8"  width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="8"  width="8" height="8" fill="#f8d840"/>
+        <rect x="0"  y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="8"  y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="16" y="16" width="8" height="8" fill="#f8d840"/>
+        <rect x="8"  y="8"  width="8" height="8" fill="#5c3a1e"/>
+    </g>
+
+    <!-- Blue flowers -->
+    <g class="b1" transform="translate(42,376)">
+        <rect x="5" y="22" width="6" height="80" fill="#5a8a3c"/>
+        <rect x="-2" y="52" width="9" height="7" fill="#7ec850" rx="2"/>
+        <rect x="13" y="67" width="9" height="7" fill="#7ec850" rx="2"/>
+        <rect x="1"  y="0"  width="7" height="7" fill="#80c0f0"/>
+        <rect x="8"  y="0"  width="7" height="7" fill="#80c0f0"/>
+        <rect x="1"  y="14" width="7" height="7" fill="#80c0f0"/>
+        <rect x="8"  y="14" width="7" height="7" fill="#80c0f0"/>
+        <rect x="-1" y="7"  width="7" height="7" fill="#5090d8"/>
+        <rect x="15" y="7"  width="7" height="7" fill="#5090d8"/>
+        <rect x="4"  y="7"  width="10" height="7" fill="#5090d8"/>
+    </g>
+
+    <!-- SCARECROW -->
+    <g transform="translate(0,540)">
+        <rect x="22" y="0"  width="9"  height="88" fill="#7a4e2d"/>
+        <rect x="0"  y="22" width="54" height="7"  fill="#7a4e2d"/>
+        <!-- Hat -->
+        <rect x="11" y="-34" width="32" height="7"  fill="#5c3a1e"/>
+        <rect x="18" y="-56" width="18" height="24" fill="#5c3a1e"/>
+        <!-- Head -->
+        <rect x="12" y="-26" width="28" height="22" fill="#f5e6c8" rx="2"/>
+        <rect x="17" y="-21" width="6"  height="6"  fill="#5c3a1e"/>
+        <rect x="29" y="-21" width="6"  height="6"  fill="#5c3a1e"/>
+        <rect x="17" y="-10" width="5"  height="4"  fill="#c03030"/>
+        <rect x="22" y="-8"  width="8"  height="4"  fill="#c03030"/>
+        <rect x="30" y="-10" width="5"  height="4"  fill="#c03030"/>
+        <!-- Shirt -->
+        <rect x="4"  y="29" width="15" height="24" fill="#d4782a"/>
+        <rect x="34" y="29" width="15" height="24" fill="#d4782a"/>
+        <!-- Straw -->
+        <rect x="-4" y="30" width="10" height="5" fill="#d4b87a"/>
+        <rect x="47" y="30" width="10" height="5" fill="#d4b87a"/>
+        <rect x="-4" y="36" width="10" height="4" fill="#c8a85a"/>
+        <rect x="47" y="36" width="10" height="4" fill="#c8a85a"/>
+    </g>
+
+    <!-- BUSH right -->
+    <g transform="translate(92,534)">
+        <rect x="0"  y="28" width="62" height="26" fill="#4a7a2e"/>
+        <rect x="8"  y="14" width="46" height="28" fill="#5a8a3c"/>
+        <rect x="16" y="4"  width="30" height="20" fill="#7ec850"/>
+        <rect x="24" y="0"  width="14" height="10" fill="#7ec850"/>
+        <rect x="9"  y="18" width="7" height="7" fill="#e8b820" rx="1"/>
+        <rect x="28" y="12" width="7" height="7" fill="#e8b820" rx="1"/>
+        <rect x="46" y="20" width="7" height="7" fill="#e8b820" rx="1"/>
+        <rect x="22" y="52" width="18" height="12" fill="#5c3a1e"/>
+    </g>
+
+    <!-- BUTTERFLY right -->
+    <g transform="translate(108,432)">
+        <g class="bf">
+            <rect x="0"  y="6" width="13" height="10" fill="#f0a855" rx="3" opacity=".9"/>
+            <rect x="18" y="6" width="13" height="10" fill="#f0a855" rx="3" opacity=".9"/>
+            <rect x="2"  y="2" width="10" height="14" fill="#d4782a" rx="3" opacity=".7"/>
+            <rect x="18" y="2" width="10" height="14" fill="#d4782a" rx="3" opacity=".7"/>
+        </g>
+        <rect x="13" y="3" width="4" height="16" fill="#5c3a1e" rx="1"/>
+    </g>
+
+    <!-- WHEAT right -->
+    <g transform="translate(0,636)" fill="#d4b87a">
+        <g><rect x="4"   y="0" width="5" height="62"/><rect x="2"   y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="18"  y="8" width="5" height="54"/><rect x="16"  y="8" width="9" height="9" rx="1"/></g>
+        <g><rect x="32"  y="2" width="5" height="60"/><rect x="30"  y="2" width="9" height="9" rx="1"/></g>
+        <g><rect x="46"  y="5" width="5" height="57"/><rect x="44"  y="5" width="9" height="9" rx="1"/></g>
+        <g><rect x="60"  y="0" width="5" height="62"/><rect x="58"  y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="74"  y="9" width="5" height="53"/><rect x="72"  y="9" width="9" height="9" rx="1"/></g>
+        <g><rect x="88"  y="3" width="5" height="59"/><rect x="86"  y="3" width="9" height="9" rx="1"/></g>
+        <g><rect x="102" y="6" width="5" height="56"/><rect x="100" y="6" width="9" height="9" rx="1"/></g>
+        <g><rect x="116" y="0" width="5" height="62"/><rect x="114" y="0" width="9" height="9" rx="1"/></g>
+        <g><rect x="130" y="4" width="5" height="58"/><rect x="128" y="4" width="9" height="9" rx="1"/></g>
+        <g><rect x="144" y="7" width="5" height="55"/><rect x="142" y="7" width="9" height="9" rx="1"/></g>
+    </g>
+
+    <!-- SIGN right -->
+    <g transform="translate(36,756)">
+        <rect x="18" y="0"  width="7"  height="44" fill="#6a3c18"/>
+        <rect x="0"  y="0"  width="52" height="32" fill="#f5e6c8" rx="2"/>
+        <rect x="2"  y="2"  width="48" height="28" fill="#e8d5a8" rx="1"/>
+        <rect x="6"  y="9"  width="40" height="5" fill="#5c3a1e" opacity=".4" rx="1"/>
+        <rect x="10" y="18" width="32" height="5" fill="#5c3a1e" opacity=".4" rx="1"/>
+        <rect x="4"  y="4"  width="5"  height="5" fill="#d4b87a" rx="1"/>
+        <rect x="44" y="4"  width="5"  height="5" fill="#d4b87a" rx="1"/>
+        <rect x="4"  y="22" width="5"  height="5" fill="#d4b87a" rx="1"/>
+        <rect x="44" y="22" width="5"  height="5" fill="#d4b87a" rx="1"/>
+    </g>
+</svg>
+
+<!-- BOTTOM STRIP: grass edge + pebble path -->
+<svg class="deco-svg deco-bottom" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="56" width="1440" height="64" fill="#2e5020"/>
+    <rect x="0" y="52" width="1440" height="10" fill="#3d6426"/>
+    <!-- Grass tufts (generated at intervals) -->
+    <g fill="#7ec850">
+        <script type="text/javascript">/* static generation below */</script>
+        <!-- Tufts every ~16px -->
+        <rect x="2"   y="36" width="8"  height="20" rx="3"/>
+        <rect x="18"  y="40" width="6"  height="16" rx="3"/>
+        <rect x="30"  y="34" width="8"  height="22" rx="3"/>
+        <rect x="46"  y="38" width="6"  height="18" rx="3"/>
+        <rect x="60"  y="36" width="8"  height="20" rx="3"/>
+        <rect x="76"  y="40" width="6"  height="16" rx="3"/>
+        <rect x="90"  y="34" width="8"  height="22" rx="3"/>
+        <rect x="106" y="38" width="6"  height="18" rx="3"/>
+        <rect x="120" y="36" width="8"  height="20" rx="3"/>
+        <rect x="136" y="40" width="6"  height="16" rx="3"/>
+        <rect x="150" y="34" width="8"  height="22" rx="3"/>
+        <rect x="166" y="38" width="6"  height="18" rx="3"/>
+        <rect x="180" y="36" width="8"  height="20" rx="3"/>
+        <rect x="196" y="40" width="6"  height="16" rx="3"/>
+        <rect x="210" y="34" width="8"  height="22" rx="3"/>
+        <rect x="226" y="38" width="6"  height="18" rx="3"/>
+        <rect x="240" y="36" width="8"  height="20" rx="3"/>
+        <rect x="256" y="40" width="6"  height="16" rx="3"/>
+        <rect x="270" y="34" width="8"  height="22" rx="3"/>
+        <rect x="286" y="38" width="6"  height="18" rx="3"/>
+        <rect x="300" y="36" width="8"  height="20" rx="3"/>
+        <rect x="316" y="40" width="6"  height="16" rx="3"/>
+        <rect x="330" y="34" width="8"  height="22" rx="3"/>
+        <rect x="346" y="38" width="6"  height="18" rx="3"/>
+        <rect x="360" y="36" width="8"  height="20" rx="3"/>
+        <rect x="376" y="40" width="6"  height="16" rx="3"/>
+        <rect x="390" y="34" width="8"  height="22" rx="3"/>
+        <rect x="406" y="38" width="6"  height="18" rx="3"/>
+        <rect x="420" y="36" width="8"  height="20" rx="3"/>
+        <rect x="436" y="40" width="6"  height="16" rx="3"/>
+        <rect x="450" y="34" width="8"  height="22" rx="3"/>
+        <rect x="466" y="38" width="6"  height="18" rx="3"/>
+        <rect x="480" y="36" width="8"  height="20" rx="3"/>
+        <rect x="496" y="40" width="6"  height="16" rx="3"/>
+        <rect x="510" y="34" width="8"  height="22" rx="3"/>
+        <rect x="526" y="38" width="6"  height="18" rx="3"/>
+        <rect x="540" y="36" width="8"  height="20" rx="3"/>
+        <rect x="556" y="40" width="6"  height="16" rx="3"/>
+        <rect x="570" y="34" width="8"  height="22" rx="3"/>
+        <rect x="586" y="38" width="6"  height="18" rx="3"/>
+        <rect x="600" y="36" width="8"  height="20" rx="3"/>
+        <rect x="616" y="40" width="6"  height="16" rx="3"/>
+        <rect x="630" y="34" width="8"  height="22" rx="3"/>
+        <rect x="646" y="38" width="6"  height="18" rx="3"/>
+        <rect x="660" y="36" width="8"  height="20" rx="3"/>
+        <rect x="676" y="40" width="6"  height="16" rx="3"/>
+        <rect x="690" y="34" width="8"  height="22" rx="3"/>
+        <rect x="706" y="38" width="6"  height="18" rx="3"/>
+        <rect x="720" y="36" width="8"  height="20" rx="3"/>
+        <rect x="736" y="40" width="6"  height="16" rx="3"/>
+        <rect x="750" y="34" width="8"  height="22" rx="3"/>
+        <rect x="766" y="38" width="6"  height="18" rx="3"/>
+        <rect x="780" y="36" width="8"  height="20" rx="3"/>
+        <rect x="796" y="40" width="6"  height="16" rx="3"/>
+        <rect x="810" y="34" width="8"  height="22" rx="3"/>
+        <rect x="826" y="38" width="6"  height="18" rx="3"/>
+        <rect x="840" y="36" width="8"  height="20" rx="3"/>
+        <rect x="856" y="40" width="6"  height="16" rx="3"/>
+        <rect x="870" y="34" width="8"  height="22" rx="3"/>
+        <rect x="886" y="38" width="6"  height="18" rx="3"/>
+        <rect x="900" y="36" width="8"  height="20" rx="3"/>
+        <rect x="916" y="40" width="6"  height="16" rx="3"/>
+        <rect x="930" y="34" width="8"  height="22" rx="3"/>
+        <rect x="946" y="38" width="6"  height="18" rx="3"/>
+        <rect x="960" y="36" width="8"  height="20" rx="3"/>
+        <rect x="976" y="40" width="6"  height="16" rx="3"/>
+        <rect x="990" y="34" width="8"  height="22" rx="3"/>
+        <rect x="1006" y="38" width="6" height="18" rx="3"/>
+        <rect x="1020" y="36" width="8" height="20" rx="3"/>
+        <rect x="1036" y="40" width="6" height="16" rx="3"/>
+        <rect x="1050" y="34" width="8" height="22" rx="3"/>
+        <rect x="1066" y="38" width="6" height="18" rx="3"/>
+        <rect x="1080" y="36" width="8" height="20" rx="3"/>
+        <rect x="1096" y="40" width="6" height="16" rx="3"/>
+        <rect x="1110" y="34" width="8" height="22" rx="3"/>
+        <rect x="1126" y="38" width="6" height="18" rx="3"/>
+        <rect x="1140" y="36" width="8" height="20" rx="3"/>
+        <rect x="1156" y="40" width="6" height="16" rx="3"/>
+        <rect x="1170" y="34" width="8" height="22" rx="3"/>
+        <rect x="1186" y="38" width="6" height="18" rx="3"/>
+        <rect x="1200" y="36" width="8" height="20" rx="3"/>
+        <rect x="1216" y="40" width="6" height="16" rx="3"/>
+        <rect x="1230" y="34" width="8" height="22" rx="3"/>
+        <rect x="1246" y="38" width="6" height="18" rx="3"/>
+        <rect x="1260" y="36" width="8" height="20" rx="3"/>
+        <rect x="1276" y="40" width="6" height="16" rx="3"/>
+        <rect x="1290" y="34" width="8" height="22" rx="3"/>
+        <rect x="1306" y="38" width="6" height="18" rx="3"/>
+        <rect x="1320" y="36" width="8" height="20" rx="3"/>
+        <rect x="1336" y="40" width="6" height="16" rx="3"/>
+        <rect x="1350" y="34" width="8" height="22" rx="3"/>
+        <rect x="1366" y="38" width="6" height="18" rx="3"/>
+        <rect x="1380" y="36" width="8" height="20" rx="3"/>
+        <rect x="1396" y="40" width="6" height="16" rx="3"/>
+        <rect x="1410" y="34" width="8" height="22" rx="3"/>
+        <rect x="1428" y="38" width="6" height="18" rx="3"/>
+    </g>
+    <!-- Pebbles -->
+    <g fill="#6a8450" opacity=".7">
+        <ellipse cx="80"   cy="70" rx="12" ry="7"/>
+        <ellipse cx="210"  cy="74" rx="9"  ry="6"/>
+        <ellipse cx="380"  cy="68" rx="14" ry="8"/>
+        <ellipse cx="560"  cy="72" rx="10" ry="6"/>
+        <ellipse cx="720"  cy="70" rx="13" ry="7"/>
+        <ellipse cx="900"  cy="74" rx="9"  ry="6"/>
+        <ellipse cx="1080" cy="70" rx="12" ry="7"/>
+        <ellipse cx="1260" cy="73" rx="10" ry="6"/>
+        <ellipse cx="1400" cy="69" rx="13" ry="7"/>
+    </g>
+    <!-- Small flowers on ground -->
+    <g>
+        <rect x="140" y="56" width="6" height="6" fill="#f8d840" rx="2"/>
+        <rect x="137" y="59" width="12" height="3" fill="#f8d840" rx="1"/>
+        <rect x="450" y="57" width="6" height="6" fill="#e85050" rx="2"/>
+        <rect x="447" y="60" width="12" height="3" fill="#e85050" rx="1"/>
+        <rect x="800" y="56" width="6" height="6" fill="#f8d840" rx="2"/>
+        <rect x="797" y="59" width="12" height="3" fill="#f8d840" rx="1"/>
+        <rect x="1100" y="57" width="6" height="6" fill="#b098e8" rx="2"/>
+        <rect x="1097" y="60" width="12" height="3" fill="#b098e8" rx="1"/>
+        <rect x="1340" y="56" width="6" height="6" fill="#e85050" rx="2"/>
+        <rect x="1337" y="59" width="12" height="3" fill="#e85050" rx="1"/>
+    </g>
+</svg>
+
+<!-- ══ MAIN CONTENT ══ -->
 <div class="container">
 
-    <!-- HEADER -->
     <header style="text-align:center; margin-bottom:22px; animation: pageIn 0.5s ease both;">
         <span class="mascot-wrap">🐾</span>
-        <div class="pixel-badge">✦ AI-Powered Study Companion ✦</div>
         <div class="scroll-banner">
+            <div class="pixel-badge">✦ AI-Powered Study Companion ✦</div>
             <h1>Aether Assistant</h1>
             <div class="tagline">Let's make studying fun today!</div>
         </div>
     </header>
 
-    <!-- NAV -->
     <div class="nav-tabs">
-        <button class="nav-tab active" onclick="showPage('overview', event)">🏠 Overview</button>
-        <button class="nav-tab" onclick="showPage('webcam', event)" id="webcam-tab">📹 Focus Cam</button>
-        <button class="nav-tab" onclick="showPage('shop', event)">🛍️ Shop</button>
-        <button class="nav-tab" onclick="showPage('learning', event)">📚 Learning</button>
+        <button class="nav-tab active" onclick="showPage('overview',event)">🏠 Overview</button>
+        <button class="nav-tab" onclick="showPage('webcam',event)" id="webcam-tab">📹 Focus Cam</button>
+        <button class="nav-tab" onclick="showPage('shop',event)">🛍️ Shop</button>
+        <button class="nav-tab" onclick="showPage('learning',event)">📚 Learning</button>
     </div>
 
-    <!-- ══ OVERVIEW ══ -->
+    <!-- OVERVIEW -->
     <div class="page active" id="overview-page">
         <div class="dashboard-grid">
-
-            <!-- STATS -->
             <div class="card">
                 <div class="card-icon purple">⚡</div>
                 <div class="section-title">⚡ Your Stats</div>
-                <div class="stat-item">
-                    <span>Level</span>
-                    <span class="stat-value" id="level">1</span>
-                </div>
-                <div class="stat-item">
-                    <span>Coins 🪙</span>
-                    <span class="stat-value" id="currency">100</span>
-                </div>
-                <div class="xp-label">
-                    <span>XP Progress</span>
-                    <span id="xp-text">0 / 100</span>
-                </div>
-                <div class="xp-bar">
-                    <div class="xp-fill" id="xp-fill" style="width:0%"></div>
-                </div>
+                <div class="stat-item"><span>Level</span><span class="stat-value" id="level">1</span></div>
+                <div class="stat-item"><span>Coins 🪙</span><span class="stat-value" id="currency">100</span></div>
+                <div class="xp-label"><span>XP Progress</span><span id="xp-text">0 / 100</span></div>
+                <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
             </div>
-
-            <!-- MODE -->
             <div class="card">
                 <div class="card-icon pink">🎯</div>
                 <div class="section-title">🎯 Study Mode</div>
-                <div class="mode-badge default" id="mode-indicator">
-                    <span class="dot"></span> Default Mode
-                </div>
+                <div class="mode-badge default" id="mode-indicator"><span class="dot"></span> Default Mode</div>
                 <button class="btn btn-primary" id="mode-btn">Switch to Focus Mode</button>
-                <div class="mode-desc">
-                    <strong>Default:</strong> Earn XP & coins just by studying! 🎉<br><br>
-                    <strong>Focus:</strong> Face-detection keeps you honest 👀
-                </div>
+                <div class="mode-desc"><strong>Default:</strong> Earn XP &amp; coins just by studying! 🎉<br><br><strong>Focus:</strong> Face-detection keeps you honest 👀</div>
             </div>
-
-            <!-- STUDY TIME -->
             <div class="card">
                 <div class="card-icon amber">⏱️</div>
                 <div class="section-title">⏱️ Study Time</div>
-                <div class="stat-item">
-                    <span>Total time</span>
-                    <span class="stat-value" id="total-time">0h 0m</span>
-                </div>
-                <div class="stat-item">
-                    <span>This session</span>
-                    <span class="stat-value" id="session-time">0m 0s</span>
-                </div>
+                <div class="stat-item"><span>Total time</span><span class="stat-value" id="total-time">0h 0m</span></div>
+                <div class="stat-item"><span>This session</span><span class="stat-value" id="session-time">0m 0s</span></div>
                 <div class="pixel-divider" style="margin-top:16px;"></div>
-                <div style="text-align:center; font-family:'Press Start 2P',monospace; font-size:0.42em; color:var(--wood-mid); margin-top:10px; letter-spacing:0.04em;">Keep it up, farmer! 🌱</div>
+                <div style="text-align:center;font-family:'Press Start 2P',monospace;font-size:0.42em;color:var(--wood-mid);margin-top:10px;letter-spacing:0.04em;">Keep it up, farmer! 🌱</div>
             </div>
-
-            <!-- DESKTOP BUDDY -->
             <div class="card">
                 <div class="card-icon teal">🖥️</div>
                 <div class="section-title">🖥️ Desktop Buddy</div>
                 <div class="overlay-pill on" id="overlay-indicator">✦ Overlay Active</div>
                 <button class="btn btn-primary" id="overlay-btn">Disable Overlay</button>
-                <div class="mode-desc">
-                    Toggle the floating pet that pops up when you copy text. So cute! 🐾
-                </div>
+                <div class="mode-desc">Toggle the floating pet that pops up when you copy text. So cute! 🐾</div>
             </div>
-
         </div>
     </div>
 
-    <!-- ══ WEBCAM ══ -->
+    <!-- WEBCAM -->
     <div class="page" id="webcam-page">
         <div class="card">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-                <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div style="display:flex;align-items:center;gap:10px;">
                     <div class="card-icon purple" style="margin-bottom:0;">📹</div>
-                    <div class="section-title" style="margin-bottom:0; box-shadow:none;">📹 Focus Cam</div>
+                    <div class="section-title" style="margin-bottom:0;box-shadow:none;">📹 Focus Cam</div>
                 </div>
                 <div id="live-badge" style="display:none;" class="live-dot">LIVE</div>
             </div>
-            <p style="font-family:'Press Start 2P',monospace; font-size:0.44em; color:var(--wood-mid); margin-bottom:4px; letter-spacing:0.04em; line-height:1.8;">Your webcam watches so your pet can cheer you on 🐾</p>
-
+            <p style="font-family:'Press Start 2P',monospace;font-size:0.44em;color:var(--wood-mid);margin-bottom:4px;letter-spacing:0.04em;line-height:1.8;">Your webcam watches so your pet can cheer you on 🐾</p>
             <div class="focus-stats-row">
-                <div class="focus-stat-chip">
-                    <span class="fsc-val" id="focus-pct">—</span>
-                    <span class="fsc-lbl">Focus Rate</span>
-                </div>
-                <div class="focus-stat-chip">
-                    <span class="fsc-val" id="focus-streak">0</span>
-                    <span class="fsc-lbl">🔥 Streak</span>
-                </div>
-                <div class="focus-stat-chip">
-                    <span class="fsc-val" id="focus-alerts">0</span>
-                    <span class="fsc-lbl">⚠️ Alerts</span>
-                </div>
+                <div class="focus-stat-chip"><span class="fsc-val" id="focus-pct">—</span><span class="fsc-lbl">Focus Rate</span></div>
+                <div class="focus-stat-chip"><span class="fsc-val" id="focus-streak">0</span><span class="fsc-lbl">🔥 Streak</span></div>
+                <div class="focus-stat-chip"><span class="fsc-val" id="focus-alerts">0</span><span class="fsc-lbl">⚠️ Alerts</span></div>
             </div>
-
             <div id="webcam-container">
                 <div class="webcam-placeholder" id="webcam-placeholder">
                     <div class="webcam-icon-wrap">📷</div>
@@ -957,24 +870,19 @@
                 </div>
                 <canvas id="webcam-canvas"></canvas>
             </div>
-
             <div id="webcam-live-bar" class="webcam-live-bar" style="display:none;">
                 <span class="live-dot">Recording</span>
                 <span class="streak-chip" id="streak-label">Streak: 0s 🔥</span>
             </div>
-
             <div class="webcam-controls">
                 <button class="btn btn-primary" id="webcam-start-btn">▶ Start Webcam</button>
-                <button class="btn btn-danger" id="webcam-stop-btn">⏹ Stop</button>
+                <button class="btn btn-danger"  id="webcam-stop-btn">⏹ Stop</button>
             </div>
-
-            <div id="focus-alert" class="focus-alert" style="display:none;">
-                ⚠️ Hey! Eyes on screen!
-            </div>
+            <div id="focus-alert" class="focus-alert" style="display:none;">⚠️ Hey! Eyes on screen!</div>
         </div>
     </div>
 
-    <!-- ══ SHOP ══ -->
+    <!-- SHOP -->
     <div class="page" id="shop-page">
         <div class="card">
             <div class="card-icon purple">🛍️</div>
@@ -983,12 +891,12 @@
         </div>
     </div>
 
-    <!-- ══ LEARNING ══ -->
+    <!-- LEARNING -->
     <div class="page" id="learning-page">
         <div class="card">
             <div class="card-icon purple">📚</div>
             <div class="section-title">📚 Learning Tracker</div>
-            <p style="font-family:'Press Start 2P',monospace; font-size:0.44em; color:var(--wood-mid); margin-bottom:14px; letter-spacing:0.04em; line-height:1.8;">Topics you've asked for help with — keep it up! 🌟</p>
+            <p style="font-family:'Press Start 2P',monospace;font-size:0.44em;color:var(--wood-mid);margin-bottom:14px;letter-spacing:0.04em;line-height:1.8;">Topics you've asked for help with — keep it up! 🌟</p>
             <div id="learning-topics">
                 <div class="empty-state">
                     <div class="empty-icon">🌱</div>
@@ -1013,48 +921,28 @@
 
 <script>
     const shopItems = [
-        { name: 'Top Hat',    price: 150, emoji: '🎩' },
-        { name: 'Monocle',    price: 200, emoji: '🧐' },
-        { name: 'Crown',      price: 500, emoji: '👑' },
-        { name: 'Sunglasses', price: 100, emoji: '😎' }
+        { name:'Top Hat',    price:150, emoji:'🎩' },
+        { name:'Monocle',    price:200, emoji:'🧐' },
+        { name:'Crown',      price:500, emoji:'👑' },
+        { name:'Sunglasses', price:100, emoji:'😎' }
     ];
+    let currentMode='default', stats={}, webcamStream=null, focusAlertTimeout=null;
+    let overlayEnabled=true, focusStreak=0, focusAlertCount=0, focusFrames=0, focusedFrames=0, streakInterval=null;
 
-    let currentMode = 'default';
-    let stats = {};
-    let webcamStream = null;
-    let focusAlertTimeout = null;
-    let overlayEnabled = true;
-    let focusStreak = 0, focusAlertCount = 0, focusFrames = 0, focusedFrames = 0;
-    let streakInterval = null;
+    function triggerPop(id){const e=document.getElementById(id);e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');e.addEventListener('animationend',()=>e.classList.remove('pop'),{once:true});}
 
-    function triggerPop(id) {
-        const el = document.getElementById(id);
-        el.classList.remove('pop');
-        void el.offsetWidth;
-        el.classList.add('pop');
-        el.addEventListener('animationend', () => el.classList.remove('pop'), { once: true });
+    function showPage(p,e){
+        document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+        document.getElementById(p+'-page').classList.add('active');
+        if(e&&e.target)e.target.classList.add('active');
+        if(p==='shop')updateShop();
+        else if(p==='learning')updateLearningTopics();
     }
 
-    function showPage(pageName, e) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(pageName + '-page').classList.add('active');
-        if (e && e.target) e.target.classList.add('active');
-        if (pageName === 'shop') updateShop();
-        else if (pageName === 'learning') updateLearningTopics();
-    }
-
-    async function loadStats() {
-        try {
-            const response = await fetch('/api/stats');
-            stats = await response.json();
-            updateUI();
-        } catch (e) {
-            if (!stats.level) {
-                stats = { level: 3, currency: 220, xp: 47, mode: 'default', total_study_time: 5820, overlay_enabled: true, learning_topics: [] };
-                updateUI();
-            }
-        }
+    async function loadStats(){
+        try{const r=await fetch('/api/stats');stats=await r.json();updateUI();}
+        catch(e){if(!stats.level){stats={level:3,currency:220,xp:47,mode:'default',total_study_time:5820,overlay_enabled:true,learning_topics:[]};updateUI();}}
     }
 
     function updateUI() {
@@ -1113,53 +1001,15 @@
         updateShop();
     }
 
-    function updateShop() {
-        const container = document.getElementById('shop-items');
-        if (!container) return;
-        container.innerHTML = shopItems.map(item => `
-            <div class="shop-item">
-                <div class="item-emoji">${item.emoji}</div>
-                <div class="item-info">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-price">🪙 ${item.price} coins</div>
-                </div>
-                <button class="shop-btn" onclick="buyItem('${item.name}', ${item.price})"
-                    ${(stats.currency || 0) < item.price ? 'disabled' : ''}>
-                    Buy
-                </button>
-            </div>
-        `).join('');
+    function updateShop(){
+        const c=document.getElementById('shop-items');if(!c)return;
+        c.innerHTML=shopItems.map(i=>`<div class="shop-item"><div class="item-emoji">${i.emoji}</div><div class="item-info"><div class="item-name">${i.name}</div><div class="item-price">🪙 ${i.price} coins</div></div><button class="shop-btn" onclick="buyItem('${i.name}',${i.price})" ${(stats.currency||0)<i.price?'disabled':''}>Buy</button></div>`).join('');
     }
 
-    function updateLearningTopics() {
-        const topics = stats.learning_topics || [];
-        const container = document.getElementById('learning-topics');
-        if (topics.length === 0) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div>No data yet!<br>Copy some text and use<br>Simplify or Translate<br>to get started.</div>`;
-            return;
-        }
-        container.innerHTML = topics.map(([topic, count], index) => `
-            <div class="learning-item ${index < 3 ? 'top' : ''}">
-                <div>
-                    <div class="topic-name">${topic}</div>
-                    <div class="topic-count">Struggled ${count} time${count > 1 ? 's' : ''}</div>
-                </div>
-                <div class="rank-badge ${index < 3 ? '' : 'regular'}">#${index + 1}</div>
-            </div>
-        `).join('');
-    }
-
-    async function toggleMode() {
-        try {
-            const response = await fetch('/api/mode', { method: 'POST' });
-            const data = await response.json();
-            showNotification(data.message);
-            loadStats();
-        } catch (e) {
-            stats.mode = stats.mode === 'focus' ? 'default' : 'focus';
-            updateUI();
-            showNotification('Mode switched!');
-        }
+    function updateLearningTopics(){
+        const t=stats.learning_topics||[],c=document.getElementById('learning-topics');
+        if(!t.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon">🌱</div>No data yet!<br>Copy some text and use<br>Simplify or Translate<br>to get started.</div>`;return;}
+        c.innerHTML=t.map(([topic,count],i)=>`<div class="learning-item ${i<3?'top':''}"><div><div class="topic-name">${topic}</div><div class="topic-count">Struggled ${count} time${count>1?'s':''}</div></div><div class="rank-badge ${i<3?'':'regular'}">#${i+1}</div></div>`).join('');
     }
 
     async function toggleOverlay() {
@@ -1207,27 +1057,17 @@
             document.getElementById('webcam-container').appendChild(video);
             await fetch('/api/webcam/start', { method: 'POST' }).catch(() => {});
             showNotification('Webcam started! 👀');
-        } catch (error) {
-            showNotification('Could not access webcam: ' + error.message);
-        }
+        }catch(e){showNotification('Could not access webcam: '+e.message);}
     }
 
-    async function processWebcamFrames(video, canvas, ctx) {
-        if (!webcamStream) return;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        focusFrames++;
-        canvas.toBlob(async (blob) => {
-            const formData = new FormData();
-            formData.append('frame', blob);
-            try {
-                const response = await fetch('/api/webcam/detect', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.face_detected) { focusedFrames++; hideFocusAlert(); }
-                else showFocusAlert();
-                updateFocusStats();
-            } catch (e) {}
+    async function processFrames(vid,cv,ctx){
+        if(!webcamStream)return;
+        ctx.drawImage(vid,0,0,cv.width,cv.height);focusFrames++;
+        cv.toBlob(async(blob)=>{
+            const fd=new FormData();fd.append('frame',blob);
+            try{const r=await fetch('/api/webcam/detect',{method:'POST',body:fd});const d=await r.json();if(d.face_detected){focusedFrames++;hideFocusAlert();}else showFocusAlert();updateFocusStats();}catch(e){}
         });
-        requestAnimationFrame(() => processWebcamFrames(video, canvas, ctx));
+        requestAnimationFrame(()=>processFrames(vid,cv,ctx));
     }
 
     function updateFocusStats() {
@@ -1266,36 +1106,20 @@
         const video = document.querySelector('#webcam-container video');
         if (video) video.remove();
         hideFocusAlert();
-        await fetch('/api/webcam/stop', { method: 'POST' }).catch(() => {});
+        await fetch('/api/webcam/stop',{method:'POST'}).catch(()=>{});
         showNotification('Webcam stopped 📷');
     }
 
-    function buyItem(name, price) {
-        if ((stats.currency || 0) < price) return;
-        stats.currency -= price;
-        fetch('/api/shop/buy', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({item: name}) }).catch(() => {});
-        showNotification(`Bought ${name}! 🎉`);
-        updateUI();
-    }
+    function buyItem(name,price){if((stats.currency||0)<price)return;stats.currency-=price;fetch('/api/shop/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:name})}).catch(()=>{});showNotification(`Bought ${name}! 🎉`);updateUI();}
 
-    function showNotification(message) {
-        const notif = document.getElementById('notification');
-        document.getElementById('notif-text').textContent = message;
-        notif.classList.remove('hiding');
-        notif.classList.add('show');
-        clearTimeout(notif._hideTimer);
-        notif._hideTimer = setTimeout(() => {
-            notif.classList.add('hiding');
-            setTimeout(() => { notif.classList.remove('show', 'hiding'); }, 350);
-        }, 2800);
-    }
+    function showNotification(msg){const n=document.getElementById('notification');document.getElementById('notif-text').textContent=msg;n.classList.remove('hiding');n.classList.add('show');clearTimeout(n._t);n._t=setTimeout(()=>{n.classList.add('hiding');setTimeout(()=>{n.classList.remove('show','hiding');},350);},2800);}
 
-    document.getElementById('mode-btn').addEventListener('click', toggleMode);
-    document.getElementById('overlay-btn').addEventListener('click', toggleOverlay);
-    document.getElementById('webcam-start-btn').addEventListener('click', startWebcam);
-    document.getElementById('webcam-stop-btn').addEventListener('click', stopWebcam);
+    document.getElementById('mode-btn').addEventListener('click',toggleMode);
+    document.getElementById('overlay-btn').addEventListener('click',toggleOverlay);
+    document.getElementById('webcam-start-btn').addEventListener('click',startWebcam);
+    document.getElementById('webcam-stop-btn').addEventListener('click',stopWebcam);
 
-    setInterval(loadStats, 1000);
+    setInterval(loadStats,1000);
     loadStats();
 </script>
 <div id="coin-hud" style="
