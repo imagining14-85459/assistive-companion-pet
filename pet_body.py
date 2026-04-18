@@ -1,45 +1,40 @@
 """ This file will focus on the movements and commands to control pet movement. """
 
 import pygame
+import random
 
-SPRITE_PATH = "assets/pet/test_rock.jpg"
-HATS = {"Top Hat":"assets/hats/top_hat.jpg", "Monocle":"assets/hats/monocle.jpg",
-        "Crown":"assets/hats/crown.jpg", "Sunglasses":"assets/hats/sunglasses.jpg"}
+SPRITE_PATH = "assets/pet/cat_sprites.png"
+HATS = {"Top Hat":"assets/hats/tophat_cat_sprites.png", "Monocle":"assets/hats/monocle_cat_sprites.png",
+        "Crown":"assets/hats/crown_cat_sprites.png", "Sunglasses":"assets/hats/sunglasses_cat_sprites.png"}
 FACEWEAR = ["Monocle", "Sunglasses"]
-class Hat(pygame.sprite.Sprite):
-    def __init__(self, x, y, hat):
-        super().__init__()
-        self.x = x
-        self.size = 50
-        self.facewear = hat in FACEWEAR
-        if self.facewear: self.y = y
-        else: self.y = y + self.size
-        self.image = pygame.transform.scale(pygame.image.load(HATS[hat]).convert_alpha(), (self.size, self.size))
-        self.rect = self.image.get_rect()
-        self.rect.center = (x,y)
-
-    def update_rect(self):
-        self.rect.center = (self.x, self.y)
 
 class Pet(pygame.sprite.Sprite):
     def __init__(self, x, y, speed, hat:str=None):
         super().__init__()
         self.x = x
         self.y = y
-        self.state = "stay"
+        self.state = "stay" #stay, wonder, follow, attack, carried
         self.shown = True
         self.size = 100
         self.speed = speed # pixels / frame
         self.held_down = False # bool on if the mouse is holding the pet
-        if hat: self.hat = Hat(x, y, hat)
-        else: self.hat = None
-        self.image = pygame.transform.scale(pygame.image.load(SPRITE_PATH).convert_alpha(), (self.size, self.size))
+        self.frame = 0
+        self.animation_id = 3
+
+        self.hat = None
+        self.curr_path = SPRITE_PATH
+        self.update_hat(hat)
+
+        self.sprite_sheet = pygame.image.load(self.curr_path).convert_alpha()
+        self.image = self._get_image()
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
 
     def update_hat(self, hat:str):
-        if not hat: self.hat = None
-        else: self.hat = Hat(self.x, self.y, hat)
+        self.hat = hat
+        if not hat: self.curr_path = SPRITE_PATH
+        else: self.curr_path = HATS[hat]
+        self.sprite_sheet = pygame.image.load(self.curr_path).convert_alpha()
 
     def collide(self, pos: tuple[int, int]) -> bool:
         return self.rect.collidepoint(pos[0], pos[1])
@@ -50,11 +45,38 @@ class Pet(pygame.sprite.Sprite):
         self.y += direction.y * self.speed
         self.update_rect()
 
+    def change_state(self, state):
+        self.state = state
+        self.frame = 0
+        match self.state:
+            case "stay":
+                self.animation_id = random.choice([0,1,2,3,6])
+            case "follow" | "wander":
+                self.animation_id = random.choice([4,5])
+            case "attack":
+                self.animation_id = random.choice([7,8])
+            case "carried":
+                self.animation_id = 9
+
     def update_rect(self):
         self.rect.center = (self.x, self.y)
 
-        if self.hat:
-            self.hat.x = self.x
-            if self.hat.facewear: self.hat.y = self.y
-            else: self.hat.y = self.y - self.hat.size
-            self.hat.update_rect()
+    def animation_tick(self): #idle (0-2, 5: 4); walk (3,4: 8); harrass (6:6) harassed (7,8: 7,8)
+        self.frame += 1
+        match self.state:
+            case "stay":
+                self.frame %= 4
+            case "follow" | "wander":
+                self.frame %= 8
+            case "attack":
+                self.frame %= 6
+            case "carried":
+                self.frame %= 7
+        self.image = self._get_image()
+
+    def _get_image(self):
+        image = pygame.Surface((32, 32)).convert_alpha()
+        image.blit(self.sprite_sheet, (0, 0), ((self.frame * 32), (self.animation_id*32), 32, 32))
+        image = pygame.transform.scale(image, (self.size, self.size))
+        image.set_colorkey((0, 0, 0)) # Remove background color if needed
+        return image

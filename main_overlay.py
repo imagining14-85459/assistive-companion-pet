@@ -81,7 +81,9 @@ def main():
     current_destination = pyautogui.position()
     idle = 0
     prev_mouse_pos = current_destination
+    animation_frame = 0
     while running:
+        animation_frame += 1
         # Update pet data for stats/cosmetics
         try:
             with open("pet_data.json", "r") as f: # updates json data
@@ -98,7 +100,7 @@ def main():
             prev_mouse_pos = pyautogui.position()
             idle = 0
         if idle > 30 * 10:
-            pet.state = "follow"
+            pet.change_state("follow")
             ui.pet_speaks(pet, "Give me attention!", 5)
             idle = 0
 
@@ -128,6 +130,7 @@ def main():
                 running = False
 
             if event.type == pygame.MOUSEMOTION and pet.held_down: # click and drag the pet
+                pet.change_state("carried")
                 current_destination = pyautogui.position()
                 dx,dy = event.rel
                 pet.speed = (dx**2 + dy**2)**0.5
@@ -147,7 +150,7 @@ def main():
                     pet.held_down = False
                     pet.speed = 10
                     current_destination = pyautogui.position()
-                    pet.state = "stay"
+                    pet.change_state("stay")
 
             if event.type == pygame.KEYDOWN:
                 # Menu navigation
@@ -204,6 +207,7 @@ def main():
                                 else:
                                     # Check if clipboard is required
                                     requires_clipboard = option.get('requires_clipboard', True)
+                                    current_clipboard_text = ""
                                     if requires_clipboard:
                                         current_clipboard_text = pyperclip.paste()
                                         if not current_clipboard_text or not current_clipboard_text.strip():
@@ -259,6 +263,9 @@ def main():
 
         # Draw pet overlay
         ui.draw(pet)
+        if animation_frame % 5 == 0: # 6 fps animation
+            animation_frame = 0
+            pet.animation_tick()
         clock.tick(30)  # 30 FPS
     
     brain.stop()

@@ -201,6 +201,13 @@ class PetUI:
             self.draw_translate_menu(x,y)
         else:
             self.draw_choices_menu(x,y)
+
+        # draw instructions
+        inst_text = self.font_small.render("Use arrow keys, Enter to select, ESC to close", True, (150, 150, 150))
+        self.screen.blit(inst_text, (10, 230))
+        alt_text = self.font_small.render("Alt+A to open menu anytime", True, (150, 150, 150))
+        self.screen.blit(alt_text, (10, 245))
+
     def draw_translate_menu(self, x, y):
         # Draw translate language selection menu
         menu_width = 280
@@ -295,7 +302,6 @@ class PetUI:
         if pet.shown:
             sprites = pygame.sprite.Group()
             sprites.add(pet)
-            if pet.hat: sprites.add(pet.hat)
             sprites.draw(self.screen)
         
         # Draw mode indicator emoji
@@ -308,13 +314,7 @@ class PetUI:
         
         # Draw menu if active
         self.pet_menu(pet)
-        
-        # Draw instructions if menu is showing #TODO: move with pet
-        if self.show_menu:
-            inst_text = self.font_small.render("Use arrow keys, Enter to select, ESC to close", True, (150, 150, 150))
-            self.screen.blit(inst_text, (10, 230))
-            alt_text = self.font_small.render("Alt+A to open menu anytime", True, (150, 150, 150))
-            self.screen.blit(alt_text, (10, 245))
+
 
         self.frame += 1
         pygame.display.update()
@@ -333,3 +333,4 @@ class PetUI:
         self.screen.blit(loading_bg, (bg_x, bg_y))
         pygame.draw.rect(self.screen, (255, 255, 255), (bg_x, bg_y, bg_width, bg_height), 1, border_radius=6)
         self.screen.blit(loading_surf, (bg_x + 8, bg_y + 5))
+
