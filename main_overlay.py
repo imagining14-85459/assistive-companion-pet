@@ -11,6 +11,24 @@ from pet_ui import PetUI
 from pet_brain import PetBrain
 from pet_body import Pet
 
+def create_brain(mode="default"):
+    try:
+        return PetBrain(mode=mode)
+    except Exception as e:
+        print(f"⚠️ Failed to initialize PetBrain ({mode}): {e}")
+        return None
+
+
+def safe_bionic_reading(text):
+    words = text.split()
+    bionic_text = []
+    for word in words:
+        if len(word) <= 2:
+            bionic_text.append(f"**{word}**")
+        else:
+            bionic_text.append(f"**{word[:2]}**{word[2:]}")
+    return " ".join(bionic_text)
+
 def main():
     """Lightweight desktop overlay with clipboard monitoring"""
     # Load pet data for stats/cosmetics
@@ -23,6 +41,10 @@ def main():
             with open("pet_data.json", "w") as g:
                 json.dump(data, g)
 
+    brain = create_brain(mode="default")
+    if brain is None:
+        print("⚠️ AI engine unavailable, running overlay in offline mode.")
+
     ui = PetUI(size = pyautogui.size())
     brain = PetBrain(mode="default")  # Default mode for overlay
     clock = pygame.time.Clock()
@@ -32,11 +54,19 @@ def main():
     def start_ai_task(label, task_fn):
         ui.show_loading(label)
         def worker():
+            nonlocal brain
             try:
-                result = task_fn()
+                if brain is None:
+                    brain = create_brain(mode="default")
+                if brain is None:
+                    raise RuntimeError("AI unavailable. Check your configuration.")
+                result = task_fn(brain)
             except Exception as e:
                 result = f"❌ {label} failed: {str(e)}"
                 print(result)
+                if brain:
+                    brain.stop()
+                brain = create_brain(mode="default")
             print(f"✅ {label} completed")
             ui.pet_speaks(pet, result, duration=10)
         threading.Thread(target=worker, daemon=True).start()
@@ -51,8 +81,14 @@ def main():
             print("IPC server listening on port 5002")
             while True:
                 conn, addr = server.accept()
-                d = conn.recv(1024).decode('utf-8')
-                if d:
+                data_chunks = []
+                while True:
+                    chunk = conn.recv(4096)
+                    if not chunk:
+                        break
+                    data_chunks.append(chunk)
+                data = b''.join(data_chunks).decode('utf-8')
+                if data:
                     print(f"Received IPC message: {data[:50]}...")
                     ui.pet_speaks(pet, data, duration=10)
                 conn.close()
@@ -203,7 +239,7 @@ def main():
                                 elif option['intent'] == 'screen_study':
                                     # Study screen content
                                     print("🤖 Analyzing screen...")
-                                    start_ai_task("Analyzing screen...", lambda: brain.study_the_screen("Explain this study material for a student with ADHD."))
+                                    start_ai_task("Analyzing screen...", lambda b: b.study_the_screen("Explain this study material for a student with ADHD."))
                                 else:
                                     # Check if clipboard is required
                                     requires_clipboard = option.get('requires_clipboard', True)
@@ -222,11 +258,11 @@ def main():
 
                                     if intent == "bionic":
                                         # Bionic reading is immediate and does not require AI thread
-                                        response = brain.bionic_reading(clipboard_input)
+                                        response = brain.bionic_reading(clipboard_input) if brain else safe_bionic_reading(clipboard_input)
                                         print(f"✨ Bionic format:\n{response[:100]}...")
                                         ui.show_speech_bubble(response, duration=10)
                                     else:
-                                        start_ai_task(f"Running {option['label']}...", lambda: brain.analyze_clipboard_text(clipboard_input, intent))
+                                        start_ai_task(f"Running {option['label']}...", lambda b: b.analyze_clipboard_text(clipboard_input, intent))
                         elif event.key == pygame.K_ESCAPE:
                             ui.toggle_menu(False)
                 
@@ -253,13 +289,10 @@ def main():
 
         # Synchronize focus mode with the background brain
         current_mode = data.get("mode", "default")
-        if current_mode != brain.mode:
+        if brain:
             brain.stop()
-            try:
-                brain = PetBrain(mode=current_mode)
-            except Exception as e:
-                print(f"⚠️ Failed to switch Brain mode: {e}")
-                brain = PetBrain(mode="default")
+        elif current_mode != getattr(brain, 'mode', None):
+            brain = create_brain(mode=current_mode)
 
         # Draw pet overlay
         ui.draw(pet)

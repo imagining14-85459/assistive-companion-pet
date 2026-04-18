@@ -24,6 +24,8 @@ class PetUI:
         self.speech_bubble_duration = 5  # seconds
         self.is_loading = False
         self.loading_text = ""
+        self.speech_scroll_offset = 0  # For scrolling long text
+        self.max_visible_lines = 8  # Maximum lines visible in scrollable area
 
         # Menu state
         self.show_menu = False
@@ -39,10 +41,13 @@ class PetUI:
             {'key': '1', 'label': 'Spanish', 'language': 'Spanish'},
             {'key': '2', 'label': 'French', 'language': 'French'},
             {'key': '3', 'label': 'German', 'language': 'German'},
+            {'key': '4', 'label': 'Italian', 'language': 'Italian'},
             {'key': '5', 'label': 'Portuguese', 'language': 'Portuguese'},
-            {'key': '6', 'label': 'Chinese', 'language': 'Chinese'},
+            {'key': '6', 'label': 'Chinese', 'language': 'Simplified Chinese'},
             {'key': '7', 'label': 'Japanese', 'language': 'Japanese'},
             {'key': '8', 'label': 'Korean', 'language': 'Korean'},
+            {'key': '9', 'label': 'Russian', 'language': 'Russian'},
+            {'key': '0', 'label': 'Arabic', 'language': 'Arabic'},
         ]
         self.selected_option = 0
 
@@ -59,7 +64,7 @@ class PetUI:
                 NSApp.windows()[0].setLevel_(NSFloatingWindowLevel)
             except ImportError:
                 pass  # works without it, just won't float above other windows
-        
+
         # Platform-specific overlay setup
         hwnd = pygame.display.get_wm_info()["window"]
         # Platform-specific overlay setup
@@ -75,7 +80,38 @@ class PetUI:
                 NSApp.windows()[0].setLevel_(NSFloatingWindowLevel)
             except ImportError:
                 pass
+    def _get_wrapped_lines(self):
+        """Get wrapped lines for current speech bubble text"""
+        if not self.speech_bubble_text:
+            return []
 
+        # Load font size
+        try:
+            with open("pet_data.json", "r") as f:
+                data = json.load(f)
+            font_size = data.get('font_size', 11)
+        except:
+            font_size = 11
+
+        speech_font = pygame.font.SysFont("Arial", font_size)
+        max_width = 280
+        words = self.speech_bubble_text.split()
+        lines = []
+        current_line = ""
+
+        for word in words:
+            test_line = current_line + (" " if current_line else "") + word
+            if speech_font.size(test_line)[0] > max_width:
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+            else:
+                current_line = test_line
+
+        if current_line:
+            lines.append(current_line)
+
+        return lines
     def pet_speaks(self, pet, text, duration=5):
         """ Orders a pet to speak. """
         if not pet.shown: return
@@ -86,6 +122,7 @@ class PetUI:
         self.speech_bubble_text = text
         self.speech_bubble_time = time.time()
         self.speech_bubble_duration = duration
+        self.speech_scroll_offset = 0  # Reset scroll when showing new text
         self.hide_loading()
 
     def show_loading(self, text="Thinking..."):
@@ -137,36 +174,51 @@ class PetUI:
         if not self.is_speech_bubble_active():
             return
 
+        print(f"🎨 Drawing speech bubble: '{self.speech_bubble_text[:30]}...'")
+
+        # Load font size from pet data
+        try:
+            with open("pet_data.json", "r") as f:
+                data = json.load(f)
+            font_size = data.get('font_size', 11)
+        except:
+            font_size = 11
+
+        # Create font with dynamic size
+        speech_font = pygame.font.SysFont("Arial", font_size)
+
         # Wrap text with better handling for long messages
-        max_width = 220  # Increased width
-        max_lines = 8   # Limit lines to prevent overflow
+        max_width = 280  # Wider for side positioning
         words = self.speech_bubble_text.split()
         lines = []
         current_line = ""
         
         for word in words:
             test_line = current_line + (" " if current_line else "") + word
-            if self.font_small.size(test_line)[0] > max_width:
+            if speech_font.size(test_line)[0] > max_width:
                 if current_line:
                     lines.append(current_line)
-                    if len(lines) >= max_lines - 1:  # Leave room for truncation message
-                        break
                 current_line = word
             else:
                 current_line = test_line
         
-        if current_line and len(lines) < max_lines:
+        if current_line:
             lines.append(current_line)
-        
-        # Truncate if too long
-        if len(lines) >= max_lines:
-            lines = lines[:max_lines-1]
-            lines.append("... (truncated)")
 
-        # Draw bubble background
-        line_height = 16
-        bubble_height = len(lines) * line_height + 20
-        bubble_width = max_width + 20
+        # Calculate visible lines and scrolling
+        line_height = font_size + 4
+        total_lines = len(lines)
+        visible_lines = min(self.max_visible_lines, total_lines)
+
+        # Adjust max_visible_lines based on font size for better fit
+        max_bubble_height = 200  # Maximum bubble height
+        calculated_visible = max_bubble_height // line_height
+        visible_lines = min(visible_lines, calculated_visible)
+
+        # Bubble dimensions
+        bubble_height = visible_lines * line_height + 30  # Extra space for scrollbar
+        bubble_width = max_width + 30
+
         bubble_x = x
         bubble_y = y - bubble_height*2
         # Ensure bubble doesn't go off screen
@@ -178,14 +230,33 @@ class PetUI:
         if bubble_y + bubble_height > screen_height - 10:
             bubble_y = screen_height - bubble_height - 10
 
-        # Bubble rectangle with pixel-art colors (more visible)
-        pygame.draw.rect(self.screen, (255, 255, 200), (bubble_x, bubble_y, bubble_width, bubble_height), border_radius=8)  # Light yellow background
-        pygame.draw.rect(self.screen, (0, 0, 0), (bubble_x, bubble_y, bubble_width, bubble_height), 2, border_radius=8)  # Black border
+        # Bubble background
+        pygame.draw.rect(self.screen, (255, 255, 200), (bubble_x, bubble_y, bubble_width, bubble_height), border_radius=8)
+        pygame.draw.rect(self.screen, (0, 0, 0), (bubble_x, bubble_y, bubble_width, bubble_height), 2, border_radius=8)
         
-        # Draw text
-        for i, line in enumerate(lines):
-            text_surf = self.font_small.render(line, True, (0, 0, 0))  # Black text
-            self.screen.blit(text_surf, (bubble_x + 10, bubble_y + 8 + i * line_height))
+        # Draw visible text lines with scrolling
+        start_line = self.speech_scroll_offset
+        end_line = min(start_line + visible_lines, total_lines)
+
+        for i, line_idx in enumerate(range(start_line, end_line)):
+            line = lines[line_idx]
+            text_surf = speech_font.render(line, True, (0, 0, 0))
+            self.screen.blit(text_surf, (bubble_x + 15, bubble_y + 10 + i * line_height))
+
+        # Draw scrollbar if needed
+        if total_lines > visible_lines:
+            scrollbar_width = 8
+            scrollbar_x = bubble_x + bubble_width - scrollbar_width - 5
+            scrollbar_height = bubble_height - 20
+            scrollbar_y = bubble_y + 10
+
+            # Scrollbar background
+            pygame.draw.rect(self.screen, (200, 200, 200), (scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height), border_radius=4)
+
+            # Scrollbar handle
+            handle_height = max(20, scrollbar_height * visible_lines // total_lines)
+            handle_y = scrollbar_y + (scrollbar_height - handle_height) * start_line // (total_lines - visible_lines)
+            pygame.draw.rect(self.screen, (100, 100, 100), (scrollbar_x, handle_y, scrollbar_width, handle_height), border_radius=4)
 
     def pet_menu(self, pet):
         """ Shows the menu, depending on whether the pet is shown or not. """
@@ -333,4 +404,3 @@ class PetUI:
         self.screen.blit(loading_bg, (bg_x, bg_y))
         pygame.draw.rect(self.screen, (255, 255, 255), (bg_x, bg_y, bg_width, bg_height), 1, border_radius=6)
         self.screen.blit(loading_surf, (bg_x + 8, bg_y + 5))
-
