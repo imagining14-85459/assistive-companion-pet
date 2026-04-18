@@ -1009,7 +1009,7 @@
             const fd=new FormData();fd.append('frame',blob);
             try{const r=await fetch('/api/webcam/detect',{method:'POST',body:fd});const d=await r.json();if(d.face_detected){focusedFrames++;hideFocusAlert();}else showFocusAlert();updateFocusStats();}catch(e){}
         });
-        requestAnimationFrame(()=>processFrames(vid,cv,ctx));
+        requestAnimationFrame(()=>processFrames(vid,cv,ctx)); // hello
     }
 
     function updateFocusStats(){const p=focusFrames>0?Math.round(focusedFrames/focusFrames*100):null;document.getElementById('focus-pct').textContent=p!==null?p+'%':'—';document.getElementById('focus-streak').textContent=focusStreak;document.getElementById('focus-alerts').textContent=focusAlertCount;}
