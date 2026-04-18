@@ -72,6 +72,7 @@ class Pet(pygame.sprite.Sprite):
         self.update_rect()
 
     def change_state(self, state):
+        if state == self.state: return
         self.state = state
         self.frame = 0
         match self.state:

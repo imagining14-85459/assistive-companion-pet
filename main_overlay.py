@@ -284,8 +284,10 @@ def main():
                     print("❌ Menu closed with ESC")
 
         # Movement logic
-        if abs(current_destination[0] - pet.x) > pet.size or abs(current_destination[1] - pet.y) > pet.size:
+        if abs(current_destination[0] - pet.x) > 20 or abs(current_destination[1] - pet.y) > 20:
             pet.take_step(current_destination[0], current_destination[1])
+        elif pet.state != "carried":
+            pet.change_state("stay")
 
         # Synchronize focus mode with the background brain
         current_mode = data.get("mode", "default")

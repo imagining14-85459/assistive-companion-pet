@@ -12,11 +12,17 @@ def main():
     try: # Prepare data
         with open("pet_data.json", "r") as f:
             data = json.load(f)
+        if len(data) < 3: # create if pet_data.json is empty
+            with open("default_pet_info.json", "r") as f:
+                data = json.load(f)
+            with open("pet_data.json", "w") as g:
+                json.dump(data, g, indent=4)
+
     except FileNotFoundError: # Create pet_data.json using default_pet_info.json
         with open("default_pet_info.json", "r") as f:
             data = json.load(f)
-            with open("pet_info.json", "w") as g:
-                json.dump(data, g)
+        with open("pet_data.json", "w") as g:
+            json.dump(data, g, indent=4)
 
     print("Starting Aether Assistant...")
     print("Hybrid Architecture: Web Dashboard + Desktop Overlay")
