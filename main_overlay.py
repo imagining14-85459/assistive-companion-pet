@@ -118,7 +118,21 @@ def main():
     idle = 0
     prev_mouse_pos = current_destination
     animation_frame = 0
+    behavior_frame = 0
     while running:
+        behavior_frame += 1
+        if behavior_frame >= 30 * 10:
+            choice = random.randint(1,2)
+            if choice == 1:
+                pet.change_state("wander")
+                current_destination = (round(pyautogui.size()[0] * random.random()), round(pyautogui.size()[1] * random.random()))
+            else:
+                pet.change_state("follow")
+            behavior_frame = 0
+            pet.change_state("wander")
+        if pet.state == "follow":
+            current_destination = (pyautogui.position()[0], pyautogui.position()[1] - 20)
+
         animation_frame += 1
         # Update pet data for stats/cosmetics
         try:
@@ -130,18 +144,6 @@ def main():
         pet.shown = data.get("overlay_enabled", True)
         pet.update_hat(data.get("equipped_hat", None))
         current_time = time.time()
-        if prev_mouse_pos == pyautogui.position():
-            idle += 1
-        else:
-            prev_mouse_pos = pyautogui.position()
-            idle = 0
-        if idle > 30 * 10:
-            pet.change_state("follow")
-            ui.pet_speaks(pet, "Give me attention!", 5)
-            idle = 0
-
-        if pet.state == "follow":
-            current_destination = pyautogui.position()
 
         # load mode
         mode = data.get("mode", "default")
