@@ -647,8 +647,15 @@
         try {
             const r = await fetch('/api/shop/buy', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({item: name}) });
             const d = await r.json();
+            const text = await r.text();
+            console.log("RAW RESPONSE FROM SERVER:", text);
+            return JSON.parse(text);
             showNotification(d.success ? `Bought ${name}! 🎉` : (d.message || 'Purchase failed!'));
-        } catch(e) { showNotification('Server error!'); }
+        } catch(err){
+            console.error("Fetch error:", err);
+            showNotification('Server error!');
+        }
+
         await loadStats();
     }
 

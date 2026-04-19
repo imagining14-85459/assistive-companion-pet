@@ -44,11 +44,20 @@ latest_frame = None
 face_mesh = None
 
 def get_pet_data():
-    try:
+    try: # Prepare data
         with open("pet_data.json", "r") as f:
             data = json.load(f)
-    except:
-        data = {}
+        if len(data) < 3: # create if pet_data.json is empty
+            with open("default_pet_info.json", "r") as f:
+                data = json.load(f)
+            with open("pet_data.json", "w") as g:
+                json.dump(data, g, indent=4)
+
+    except FileNotFoundError: # Create pet_data.json using default_pet_info.json
+        with open("default_pet_info.json", "r") as f:
+            data = json.load(f)
+        with open("pet_data.json", "w") as g:
+            json.dump(data, g, indent=4)
     
     if 'overlay_enabled' not in data:
         data['overlay_enabled'] = True
@@ -135,8 +144,7 @@ def toggle_mode():
 def buy_item():
     item = request.json.get('item')
     data = get_pet_data()
-    print(f"BUY REQUEST: item={item}, currency={data.get('currency')}, inventory={data.get('inventory')}")
-    
+
     prices = {
         'Top Hat': 150,
         'Monocle': 200,
@@ -144,9 +152,8 @@ def buy_item():
         'Sunglasses': 100
     }
     
-    price = prices.get(item)
-    print(f"Price found: {price}")
-    
+    price = prices.get(item, 0)
+
     if price is None:
         print("FAIL: item not found")
         return jsonify({'success': False, 'message': 'Item not found.'}), 400
